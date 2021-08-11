@@ -4,10 +4,13 @@ from django.db import models
 from . managers import UserManager
 
 class User(AbstractUser):
-    username = None
+    
     email = models.EmailField(
         "Адрес e-mail",
         unique=True,
+        error_messages={
+            'unique': "Пользователь с указанным e-mail уже зарегистрирован.",
+        },
     )
     bio = models.TextField(
         "Биография",
@@ -16,12 +19,10 @@ class User(AbstractUser):
     role = models.SlugField(
         "Роль пользователя",
     )
-    error_messages={
-            'unique': "Пользователь с указанным e-mail уже зарегистрирован.",
-        }
+    
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+   # USERNAME_FIELD = "email"
+   # REQUIRED_FIELDS = []
 
     objects = UserManager()
 
