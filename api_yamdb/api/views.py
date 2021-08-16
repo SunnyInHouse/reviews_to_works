@@ -10,7 +10,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import User
-from reviews.models import Titles, Reviews, Genre, Category, Title
+from reviews.models import Reviews, Genre, Category, Title
 from .permissions import OnlyAdmin, OnlyOwnAccount, OwnerOrReadOnlyList, ReadOnly, IsAdminOrReadOnly
 from .serializers import (AuthSerializer, TokenDataSerializer, UsersSerializer,
                           ReviewsSerializer, CommentSerializer,
@@ -99,7 +99,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # print('self.kwargs.get("title_id") = ', self.kwargs.get("title_id"))
-        title = get_object_or_404(Titles, pk=self.kwargs.get("title_id"))
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
         # print("title = ", title)
         return title.reviews
 
@@ -138,6 +138,8 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name',)
 
 
 class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
