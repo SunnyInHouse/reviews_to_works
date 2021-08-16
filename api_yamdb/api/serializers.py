@@ -1,11 +1,15 @@
+import datetime as dt
+
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from users.models import ROLE_CHOICES, User
+from reviews.models import Reviews, Comments, Title, Genre, Category
 
 
 class AuthSerializer(serializers.ModelSerializer):
@@ -98,4 +102,82 @@ class UsersSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя использовать для username имя me.'
             )
+        return value
+
+
+class ReviewsSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field="username", read_only=True)
+
+    class Meta:
+        fields = "__all__"
+        model = Reviews
+
+    def validate_score(self, value):
+        if 10 >= value >= 1:
+            # print('1validate_score value = ', value)
+            return value
+        # print('2validate_score value = ', value)
+        raise serializers.ValidationError(
+            "Оценка должна находиться в диапазоне [1..10]"
+        )
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field="username", read_only=True)
+
+    class Meta:
+        fields = "__all__"
+        model = Comments
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=256)
+    slug = serializers.SlugField(
+        max_length=50,
+        validators=[UniqueValidator(queryset=Genre.objects.all())]
+    )
+
+    class Meta:
+        model = Genre
+        fields = ('name', 'slug')
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=256)
+    slug = serializers.SlugField(
+        max_length=50,
+        validators=[UniqueValidator(queryset=Genre.objects.all())]
+    )
+
+    class Meta:
+        model = Category
+        fields = ('name', 'slug')
+
+
+class TitleSerializerList(serializers.ModelSerializer):
+    description = serializers.CharField(required=False)
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(required=False)
+    genre = serializers.SlugRelatedField(slug_field='slug',
+                                         queryset=Genre.objects.all(),
+                                         many=True)
+    category = serializers.SlugRelatedField(slug_field='slug',
+                                            queryset=Category.objects.all())
+
+    class Meta:
+        model = Title
+        fields = ('name', 'year', 'description', 'genre', 'category')
+
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if not value > year:
+            raise serializers.ValidationError('Проверьте год!')
         return value
