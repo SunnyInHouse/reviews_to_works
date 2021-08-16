@@ -2,13 +2,6 @@ from django.db import models
 from users.models import User
 
 
-# временно создаю этот класс, чтобы можно было тестировать
-# class Titles(models.Model):
-#     name = models.TextField(verbose_name="Содержание отзыва")
-#     year = models.IntegerField(verbose_name="Год")
-#     category_id = models.IntegerField(verbose_name="Категория")
-
-
 class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)

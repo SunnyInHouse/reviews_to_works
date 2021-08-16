@@ -9,8 +9,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import User
+
 from reviews.models import Reviews, Genre, Category, Title
-from .permissions import OnlyAdmin, OnlyOwnAccount, OwnerOrReadOnlyList, ReadOnly, IsAdminOrReadOnlyPermission
+from .permissions import OnlyAdmin, OnlyOwnAccount, OwnerOrReadOnlyList, ReadOnly, IsAdminOrReadOnly
 from .serializers import (AuthSerializer, TokenDataSerializer, UsersSerializer,
                           ReviewsSerializer, CommentSerializer,
                           GenreSerializer, CategorySerializer,
@@ -108,6 +109,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (OwnerOrReadOnlyList,)
     authentication_classes = (JWTAuthentication,)
+    pagination_class = pagination.PageNumberPagination
 
     def get_permissions(self):
         if self.action == 'retrieve':
@@ -129,8 +131,13 @@ class CommentsViewSet(viewsets.ModelViewSet):
 class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
                    mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = Genre.objects.all()
+    lookup_field = 'slug'
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnlyPermission,)
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = pagination.PageNumberPagination
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ("name",)
 
 
 class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -138,14 +145,20 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     queryset = Category.objects.all()
     lookup_field = 'slug'
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnlyPermission,)
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = pagination.PageNumberPagination
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ("name",)
 
 
 class TitleViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
                    mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (IsAdminOrReadOnlyPermission,)
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('category__slug', 'genre__slug')
     search_fields = ('name', 'year')

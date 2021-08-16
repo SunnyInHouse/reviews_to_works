@@ -121,7 +121,7 @@ class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
         max_length=50,
-        validators=[UniqueValidator(queryset=Genre.objects.all())]
+        validators=[UniqueValidator(queryset=Category.objects.all())]
     )
 
     class Meta:
@@ -153,19 +153,16 @@ class TitleSerializer(serializers.ModelSerializer):
 
     def validate_year(self, value):
         year = dt.date.today().year
-        if not value > year:
+        if value > year:
             raise serializers.ValidationError('Проверьте год!')
         return value
-
-
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field="username", read_only=True)
 
     class Meta:
-        # fields = "__all__"
-        fields = ('score', 'text')
+        fields = "__all__"
         model = Reviews
 
     def validate_score(self, value):
@@ -180,7 +177,5 @@ class CommentSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field="username", read_only=True)
 
     class Meta:
-        # fields = "__all__"
-        fields = ('id', 'review', 'author', 'text', 'pub_date')
+        fields = "__all__"
         model = Comments
-        # read_only_fields = ('author', 'review')
