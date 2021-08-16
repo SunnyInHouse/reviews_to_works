@@ -1,3 +1,4 @@
+from re import search
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -79,8 +80,7 @@ class UsersViewSet(viewsets.ModelViewSet):
             )
             if serializer.is_valid():
                 if 'role' in serializer.validated_data:
-                    if user.role == 'user':
-                        serializer.validated_data['role'] = 'user'
+                    serializer.validated_data['role'] = request.user.role
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -148,6 +148,8 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name',)
 
 
 class TitleViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,

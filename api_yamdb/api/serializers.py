@@ -146,7 +146,7 @@ class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
         max_length=50,
-        validators=[UniqueValidator(queryset=Genre.objects.all())]
+        validators=[UniqueValidator(queryset=Category.objects.all())]
     )
 
     class Meta:
