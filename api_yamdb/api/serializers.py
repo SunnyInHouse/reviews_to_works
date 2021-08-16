@@ -105,31 +105,6 @@ class UsersSerializer(serializers.ModelSerializer):
         return value
 
 
-class ReviewsSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field="username", read_only=True)
-
-    class Meta:
-        fields = "__all__"
-        model = Reviews
-
-    def validate_score(self, value):
-        if 10 >= value >= 1:
-            # print('1validate_score value = ', value)
-            return value
-        # print('2validate_score value = ', value)
-        raise serializers.ValidationError(
-            "Оценка должна находиться в диапазоне [1..10]"
-        )
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field="username", read_only=True)
-
-    class Meta:
-        fields = "__all__"
-        model = Comments
-
-
 class GenreSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
@@ -174,10 +149,38 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('name', 'year', 'description', 'genre', 'category')
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
     def validate_year(self, value):
         year = dt.date.today().year
         if not value > year:
             raise serializers.ValidationError('Проверьте год!')
         return value
+
+
+
+
+class ReviewsSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field="username", read_only=True)
+
+    class Meta:
+        # fields = "__all__"
+        fields = ('score', 'text')
+        model = Reviews
+
+    def validate_score(self, value):
+        if 10 >= value >= 1:
+            return value
+        raise serializers.ValidationError(
+            "Оценка должна находиться в диапазоне [1..10]"
+        )
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field="username", read_only=True)
+
+    class Meta:
+        # fields = "__all__"
+        fields = ('id', 'review', 'author', 'text', 'pub_date')
+        model = Comments
+        # read_only_fields = ('author', 'review')
