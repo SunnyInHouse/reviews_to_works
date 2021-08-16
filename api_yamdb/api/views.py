@@ -53,7 +53,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.PageNumberPagination
 
     @action(
-        detail=False,
+        detail=True,
         methods=['get', 'patch'],
         permission_classes=(OnlyOwnAccount,)
     )
