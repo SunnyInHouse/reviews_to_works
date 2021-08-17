@@ -160,6 +160,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class ReviewsSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field="username", read_only=True)
+    # score = serializers.SerializerMethodField()
 
     class Meta:
         fields = "__all__"
@@ -171,6 +172,9 @@ class ReviewsSerializer(serializers.ModelSerializer):
                 message=('Можно оставлять только один отзыв')
             )
         ]
+
+    # def get_score(self, obj):
+        # return sum(Reviews.objects.only("score"))//Reviews.objects.count()
 
     def validate_score(self, value):
         if 10 >= value >= 1:
