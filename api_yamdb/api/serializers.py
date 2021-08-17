@@ -164,6 +164,13 @@ class ReviewsSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
         model = Reviews
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Reviews.objects.all(),
+                fields=('author', 'title'),
+                message=('Можно оставлять только один отзыв')
+            )
+        ]
 
     def validate_score(self, value):
         if 10 >= value >= 1:

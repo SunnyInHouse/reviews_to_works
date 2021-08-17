@@ -160,7 +160,7 @@ class TitleViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ('category__slug', 'genre__slug')
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
     search_fields = ('name', 'year')
 
     def get_serializer_class(self):
