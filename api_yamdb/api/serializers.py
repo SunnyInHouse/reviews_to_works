@@ -1,6 +1,7 @@
 import datetime as dt
 
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
@@ -9,7 +10,7 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from users.models import ROLE_CHOICES, User
-from reviews.models import Reviews, Comments, Title, Genre, Category
+from reviews.models import Review, Comments, Title, Genre, Category
 
 
 class AuthSerializer(serializers.ModelSerializer):
@@ -159,18 +160,18 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field="username", read_only=True)
+    author = SlugRelatedField(slug_field="username", read_only=True, default=serializers.CurrentUserDefault())
 
     class Meta:
-        fields = "__all__"
-        model = Reviews
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Reviews.objects.all(),
-                fields=('author', 'title'),
-                message=('Можно оставлять только один отзыв')
-            )
-        ]
+        fields = ('id', 'author', 'score', 'text', 'pub_date')
+        model = Review
+ 
+    
+    def validate(self, data):
+        if self.context["request"].user.reviews.exists():
+            raise ValidationError('Нельзя публиковать более 1 отзыва на произведение')
+        return data
+
 
     def validate_score(self, value):
         if 10 >= value >= 1:

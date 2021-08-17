@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import User
 
-from reviews.models import Reviews, Genre, Category, Title
+from reviews.models import Review, Genre, Category, Title
 from .permissions import OnlyAdmin, OnlyOwnAccount, OwnerOrReadOnlyList, ReadOnly, IsAdminOrReadOnly
 from .serializers import (AuthSerializer, TokenDataSerializer, UsersSerializer,
                           ReviewsSerializer, CommentSerializer,
@@ -91,6 +91,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     permission_classes = (OwnerOrReadOnlyList,)
     authentication_classes = (JWTAuthentication,)
+    pagination_class = pagination.PageNumberPagination
 
     def get_permissions(self):
         if self.action == 'retrieve':
@@ -99,10 +100,10 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
-        return title.reviews
+        return title.reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        serializer.save(author=self.request.user, title=Title.objects.get(pk=self.kwargs.get("title_id")))
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
@@ -118,7 +119,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = get_object_or_404(
-            Reviews,
+            Review,
             pk=self.kwargs.get("reviews_id"),
             title__pk=self.kwargs.get("title_id")
         )
