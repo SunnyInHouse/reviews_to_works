@@ -188,7 +188,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         if category_slug is not None:
             queryset = queryset.filter(category__slug=category_slug)
         if name_in_query is not None:
-            queryset = queryset.filter(name=name_in_query)
+            queryset = queryset.filter(name__contains=name_in_query)
         if year_in_query is not None:
             queryset = queryset.filter(year=year_in_query)
         return queryset
