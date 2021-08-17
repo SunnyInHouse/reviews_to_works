@@ -153,17 +153,10 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    # mixins.CreateModelMixin, mixins.ListModelMixin,
-                #    mixins.DestroyModelMixin, mixins.RetrieveModelMixin,
-                #    viewsets.GenericViewSet):
-    # queryset = Title.objects.all()
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
-    # filter_backends = (DjangoFilterBackend, ) # filters.SearchFilter, )
-    # filterset_fields = ('name', 'year') #'category__slug', 'genre__slug',
-    #search_fields = ('name', 'year')
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -184,7 +177,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         if category_slug is not None:
             queryset = queryset.filter(category__slug = category_slug)
         if name_in_query is not None:
-            queryset = queryset.filter(name = name_in_query)
+            queryset = queryset.filter(name__contains = name_in_query)
         if year_in_query is not None:
             queryset = queryset.filter(year = year_in_query)
         return queryset
