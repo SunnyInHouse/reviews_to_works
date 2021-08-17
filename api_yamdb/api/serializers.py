@@ -131,8 +131,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializerList(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
-    genre = GenreSerializer(many=True)
-    category = CategorySerializer()
+    genre = GenreSerializer(many=True, read_only=True)
+    category = CategorySerializer(read_only=True)
 
     class Meta:
         model = Title
