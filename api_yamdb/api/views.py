@@ -89,13 +89,15 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
-    permission_classes = (OwnerOrReadOnlyList,)
+    permission_classes = (OwnerOrReadOnlyList, )
     authentication_classes = (JWTAuthentication,)
     pagination_class = pagination.PageNumberPagination
 
+
+
     def get_permissions(self):
         if self.action == 'retrieve':
-            return (ReadOnly(),)
+            return (ReadOnly(), )
         return super().get_permissions()
 
     def get_queryset(self):
@@ -103,7 +105,9 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title=Title.objects.get(pk=self.kwargs.get("title_id")))
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        serializer.save(author=self.request.user, title=title)
+
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
@@ -126,7 +130,12 @@ class CommentsViewSet(viewsets.ModelViewSet):
         return review.comment
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        review = get_object_or_404(
+            Reviews,
+            pk=self.kwargs.get("review_id"),
+            title__pk=self.kwargs.get("title_id")
+        )
+        serializer.save(author=self.request.user, review=review)
 
 
 class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -154,10 +163,14 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+
+    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', 'year', 'category__slug', 'genre__slug')
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -174,11 +187,11 @@ class TitleViewSet(viewsets.ModelViewSet):
         name_in_query = self.request.query_params.get('name')
         year_in_query = self.request.query_params.get('year')
         if genre_slug is not None:
-            queryset = queryset.filter(genre__slug = genre_slug)
+            queryset = queryset.filter(genre__slug=genre_slug)
         if category_slug is not None:
-            queryset = queryset.filter(category__slug = category_slug)
+            queryset = queryset.filter(category__slug=category_slug)
         if name_in_query is not None:
-            queryset = queryset.filter(name__contains = name_in_query)
+            queryset = queryset.filter(name__contains=name_in_query)
         if year_in_query is not None:
-            queryset = queryset.filter(year = year_in_query)
+            queryset = queryset.filter(year=year_in_query)
         return queryset

@@ -160,6 +160,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
+
     author = SlugRelatedField(slug_field="username", read_only=True, default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -172,7 +173,6 @@ class ReviewsSerializer(serializers.ModelSerializer):
             raise ValidationError('Нельзя публиковать более 1 отзыва на произведение')
         return data
 
-
     def validate_score(self, value):
         if 10 >= value >= 1:
             return value
@@ -183,6 +183,8 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field="username", read_only=True)
+    # review = SlugRelatedField(slug_field="text", read_only=True)
+    review = ReviewsSerializer(read_only=True)
 
     class Meta:
         fields = "__all__"
