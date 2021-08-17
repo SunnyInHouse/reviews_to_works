@@ -131,8 +131,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializerList(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
-    genre = GenreSerializer(many=True)
-    category = CategorySerializer()
+    genre = GenreSerializer(many=True, read_only=True)
+    category = CategorySerializer(read_only=True)
 
     class Meta:
         model = Title
@@ -160,32 +160,36 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class ReviewsSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field="username", read_only=True)
+    # title = SlugRelatedField(slug_field="name", read_only=True)
+    title = TitleSerializer(read_only=True)
     # score = serializers.SerializerMethodField()
 
     class Meta:
         fields = "__all__"
         model = Reviews
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Reviews.objects.all(),
-                fields=('author', 'title'),
-                message=('Можно оставлять только один отзыв')
-            )
-        ]
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Reviews.objects.all(),
+        #         fields=('author', 'title'),
+        #         message=('Можно оставлять только один отзыв')
+        #     )
+        # ]
 
     # def get_score(self, obj):
         # return sum(Reviews.objects.only("score"))//Reviews.objects.count()
 
-    def validate_score(self, value):
-        if 10 >= value >= 1:
-            return value
-        raise serializers.ValidationError(
-            "Оценка должна находиться в диапазоне [1..10]"
-        )
+    # def validate_score(self, value):
+    #     if 10 >= value >= 1:
+    #         return value
+    #     raise serializers.ValidationError(
+    #         "Оценка должна находиться в диапазоне [1..10]"
+    #     )
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field="username", read_only=True)
+    # review = SlugRelatedField(slug_field="text", read_only=True)
+    review = ReviewsSerializer(read_only=True)
 
     class Meta:
         fields = "__all__"

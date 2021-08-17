@@ -19,7 +19,7 @@ router1.register(
 )
 router1.register(r'v1/genres', GenreViewSet)
 router1.register(r'v1/categories', CategoryViewSet, basename='category')
-router1.register(r'v1/titles', TitleViewSet)
+router1.register(r'v1/titles', TitleViewSet, basename='title')
 
 urlpatterns = [
     path('v1/auth/token/', get_jwt_token),
