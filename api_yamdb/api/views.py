@@ -93,8 +93,6 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     authentication_classes = (JWTAuthentication,)
     pagination_class = pagination.PageNumberPagination
 
-
-
     def get_permissions(self):
         if self.action == 'retrieve':
             return (ReadOnly(), )
@@ -131,7 +129,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         review = get_object_or_404(
-            Reviews,
+            Review,
             pk=self.kwargs.get("review_id"),
             title__pk=self.kwargs.get("title_id")
         )

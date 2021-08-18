@@ -9,6 +9,11 @@ ROLE_CHOICES = (
 
 
 class User(AbstractUser):
+    # password = None
+    # is_staff = None
+    # is_active = None
+    # is_superuser = None
+    # date_joined = None
 
     email = models.EmailField(
         "Адрес e-mail",
