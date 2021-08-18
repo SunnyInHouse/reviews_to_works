@@ -163,24 +163,22 @@ class TitleSerializer(serializers.ModelSerializer):
         return value
 
     def get_rating(self, obj):
-        return 4
-        # scores = obj.reviews.all()
 
-        # print("self.data = ", self.data)
-        # print("self['context']['data'].reviews.all() = ", self['context']['data'].reviews.all())
-        # print('self = ', self)
-        # print('obj = ', obj.reviews.all())
-        # print('scores = ', scores)
-        #
-        # rating = None
-        # length = len(scores)
-        #
-        # if length > 0:
-        #     rating = 0
-        #     for i in scores:
-        #         rating += i['score']
-        #     rating //= length
-        # return rating
+        reviews = Review.objects.filter(title__name=obj)
+        print('reviews = ', reviews)
+
+        print('self = ', self)
+        print('obj = ', obj)
+
+        rating = 0
+        length = len(reviews)
+
+        if rating > 0:
+            for i in reviews:
+                rating += i['score']
+            rating //= length
+            return rating
+        return -9999
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
