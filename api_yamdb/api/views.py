@@ -177,7 +177,6 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleSerializerList
         return TitleSerializer
 
-
     def get_queryset(self):
         queryset = Title.objects.all()
         genre_slug = self.request.query_params.get('genre')
