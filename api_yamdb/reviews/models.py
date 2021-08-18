@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from users.models import User
 
@@ -59,16 +60,16 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True, verbose_name="Дата отзыва"
     )
-    # def clean(self):
-    #     try:
-    #         author = User.objects.get(username=self.author.username)
-    #     reviews = Review.objects.all()
-        # review = Review.objects.create(
-        #     text='Текст второго отзыва',
-        #     score='5',
-        #     author=admin,
-        #     title=title
-        # )
+
+    class Meta:
+        unique_together = ['title', 'author']
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_title_author'
+            )
+        ]
 
 
 class Comments(models.Model):
