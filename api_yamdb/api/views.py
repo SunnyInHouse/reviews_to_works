@@ -107,7 +107,6 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=title)
 
 
-
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (OwnerOrReadOnlyList,)

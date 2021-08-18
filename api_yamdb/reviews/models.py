@@ -62,7 +62,6 @@ class Review(models.Model):
     )
 
     class Meta:
-        unique_together = ['title', 'author']
 
         constraints = [
             models.UniqueConstraint(

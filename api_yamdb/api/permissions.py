@@ -38,8 +38,6 @@ class OwnerOrReadOnlyList(permissions.BasePermission):
         return (
                 obj.author == request.user or
                 request.user.role.lower() == 'admin' or
-                request.user.is_staff or
-                request.user.is_superuser or
                 request.user.role == 'moderator'
         )
 
