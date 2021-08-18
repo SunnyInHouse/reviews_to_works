@@ -160,13 +160,12 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field="username", read_only=True, default=serializers.CurrentUserDefault())
+    author = SlugRelatedField(slug_field="username", read_only=True)
 
     class Meta:
         fields = ('id', 'author', 'score', 'text', 'pub_date')
         model = Review
- 
-    
+
     def validate(self, data):
         if self.context["request"].user.reviews.exists():
             raise ValidationError('Нельзя публиковать более 1 отзыва на произведение')

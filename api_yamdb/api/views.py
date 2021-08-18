@@ -122,7 +122,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         review = get_object_or_404(
             Review,
-            pk=self.kwargs.get("reviews_id"),
+            pk=self.kwargs.get("review_id"),
             title__pk=self.kwargs.get("title_id")
         )
         return review.comment
