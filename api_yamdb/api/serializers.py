@@ -148,15 +148,38 @@ class TitleSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(slug_field='slug',
                                             queryset=Category.objects.all())
 
+    rating = serializers.SerializerMethodField()
+
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        fields = (
+            'id', 'name', 'year', 'description', 'genre', 'category', 'rating'
+        )
 
     def validate_year(self, value):
         year = dt.date.today().year
         if value > year:
             raise serializers.ValidationError('Проверьте год!')
         return value
+
+    def get_rating(self, obj):
+        scores = obj.reviews.all()
+
+        # print("self.data = ", self.data)
+        # print("self['context']['data'].reviews.all() = ", self['context']['data'].reviews.all())
+        print('self = ', self)
+        print('obj = ', obj.reviews.all())
+        print('scores = ', scores)
+
+        rating = None
+        length = len(scores)
+
+        if length > 0:
+            rating = 0
+            for i in scores:
+                rating += i['score']
+            rating //= length
+        return rating
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
