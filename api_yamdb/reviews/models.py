@@ -59,6 +59,16 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True, verbose_name="Дата отзыва"
     )
+    # def clean(self):
+    #     try:
+    #         author = User.objects.get(username=self.author.username)
+    #     reviews = Review.objects.all()
+        # review = Review.objects.create(
+        #     text='Текст второго отзыва',
+        #     score='5',
+        #     author=admin,
+        #     title=title
+        # )
 
 
 class Comments(models.Model):
