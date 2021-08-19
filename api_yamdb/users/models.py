@@ -33,8 +33,6 @@ class User(AbstractUser):
         default="user",
     )
 
-    def __str__(self):
-        return f"{self.username} status {self.is_active}"
 
     class Meta:
         verbose_name = "Пользователь"
@@ -43,6 +41,10 @@ class User(AbstractUser):
 
         constraints = [
             models.UniqueConstraint(
-                fields=["email", "username"], name="unique_username_email"
+                fields=["email", "username"],
+                name="unique_username_email"
             )
         ]
+    
+    def __str__(self):
+        return f"{self.username}"

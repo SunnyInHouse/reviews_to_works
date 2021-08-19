@@ -1,5 +1,4 @@
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters,
     mixins,
@@ -49,11 +48,7 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         )
 
 
-@api_view(
-    [
-        "POST",
-    ]
-)
+@api_view(["POST", ])
 def get_jwt_token(request):
     serializer = TokenDataSerializer(data=request.data)
     if serializer.is_valid():
@@ -71,11 +66,11 @@ class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UsersSerializer
     lookup_field = "username"
-    permission_classes = (OnlyAdmin,)
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (OnlyAdmin,)
+    pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("=username",)
-    pagination_class = pagination.PageNumberPagination
 
     @action(
         detail=False,
@@ -103,23 +98,21 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
-    permission_classes = (OwnerOrReadOnlyList,)
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (OwnerOrReadOnlyList,)
     pagination_class = pagination.PageNumberPagination
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        return title.reviews.all()
 
     def get_permissions(self):
         if self.action == "retrieve":
             return (ReadOnly(),)
         return super().get_permissions()
 
-    def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
-        return title.reviews.all()
-
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
-        print("self = ", self)
-        print("serializer = ", serializer.validated_data["score"])
         title.rating = serializer.validated_data["score"]
         title.save()
         serializer.save(author=self.request.user, title=title)
@@ -127,14 +120,9 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (OwnerOrReadOnlyList,)
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (OwnerOrReadOnlyList,)
     pagination_class = pagination.PageNumberPagination
-
-    def get_permissions(self):
-        if self.action == "retrieve":
-            return (ReadOnly(),)
-        return super().get_permissions()
 
     def get_queryset(self):
         review = get_object_or_404(
@@ -143,6 +131,11 @@ class CommentsViewSet(viewsets.ModelViewSet):
             title__pk=self.kwargs.get("title_id"),
         )
         return review.comment.all()
+
+    def get_permissions(self):
+        if self.action == "retrieve":
+            return (ReadOnly(),)
+        return super().get_permissions()
 
     def perform_create(self, serializer):
         review = get_object_or_404(
@@ -160,12 +153,12 @@ class GenreViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = Genre.objects.all()
-    lookup_field = "slug"
     serializer_class = GenreSerializer
+    lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (filters.SearchFilter, )
     search_fields = ("name",)
 
 
@@ -176,31 +169,21 @@ class CategoryViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = Category.objects.all()
-    lookup_field = "slug"
     serializer_class = CategorySerializer
+    lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
-    filter_backends = (filters.SearchFilter,)  # DjangoFilterBackend,
+    filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = pagination.PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ("name", "year", "category__slug", "genre__slug")
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return TitleSerializerList
-        elif self.action == "retrieve":
-            return TitleSerializerList
-        return TitleSerializer
 
     def get_queryset(self):
         queryset = Title.objects.all()
@@ -218,3 +201,10 @@ class TitleViewSet(viewsets.ModelViewSet):
         elif year_in_query:
             queryset = queryset.filter(year=year_in_query)
         return queryset
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return TitleSerializerList
+        elif self.action == "retrieve":
+            return TitleSerializerList
+        return TitleSerializer

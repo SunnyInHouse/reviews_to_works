@@ -14,10 +14,10 @@ from users.models import ROLE_CHOICES, User
 
 class AuthSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
     email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
 
     class Meta:
@@ -78,12 +78,15 @@ class TokenDataSerializer(serializers.Serializer):
 
 
 class UsersSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(choices=ROLE_CHOICES, required=False)
+    role = serializers.ChoiceField(
+        choices=ROLE_CHOICES,
+        required=False,
+    )
     username = serializers.CharField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
     email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
 
     class Meta:
@@ -147,12 +150,14 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializerList(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
-    genre = GenreSerializer(many=True, read_only=True)
+    genre = GenreSerializer(
+        many=True,
+        read_only=True,
+    )
     category = CategorySerializer(read_only=True)
     rating = serializers.SerializerMethodField()
 
     def get_rating(self, obj):
-
         reviews = Review.objects.filter(title__name=obj.name)
         rating = 0
         length = len(reviews)
@@ -162,6 +167,7 @@ class TitleSerializerList(serializers.ModelSerializer):
                 rating += i.score
             rating //= length
             return rating
+
         return None
 
     class Meta:
@@ -180,15 +186,25 @@ class TitleSerializerList(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
     genre = serializers.SlugRelatedField(
-        slug_field="slug", queryset=Genre.objects.all(), many=True
+        slug_field="slug",
+        queryset=Genre.objects.all(),
+        many=True,
     )
     category = serializers.SlugRelatedField(
-        slug_field="slug", queryset=Category.objects.all()
+        slug_field="slug",
+        queryset=Category.objects.all(),
     )
 
     class Meta:
         model = Title
-        fields = ("id", "name", "year", "description", "genre", "category")
+        fields = (
+            "id",
+            "name",
+            "year",
+            "description",
+            "genre",
+            "category",
+        )
 
     def validate_year(self, value):
         year = dt.date.today().year
@@ -205,8 +221,14 @@ class ReviewsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ("id", "author", "score", "text", "pub_date")
         model = Review
+        fields = (
+            "id",
+            "author",
+            "score",
+            "text",
+            "pub_date",
+        )
 
     def validate(self, data):
         if self.context["request"].method == "POST":
@@ -227,9 +249,18 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field="username", read_only=True)
+    author = SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+    )
     review = ReviewsSerializer(read_only=True)
 
     class Meta:
-        fields = "__all__"
         model = Comments
+        fields = (
+            "id",
+            "author",
+            "review",
+            "text",
+            "pub_date",
+        )
