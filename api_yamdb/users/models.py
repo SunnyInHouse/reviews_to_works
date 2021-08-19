@@ -33,7 +33,6 @@ class User(AbstractUser):
         default="user",
     )
 
-
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
@@ -45,6 +44,6 @@ class User(AbstractUser):
                 name="unique_username_email"
             )
         ]
-    
+
     def __str__(self):
         return f"{self.username}"
