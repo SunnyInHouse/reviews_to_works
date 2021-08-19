@@ -148,6 +148,6 @@ dmypy.json
 # папки со статикой и медиа
 media/
 
-reviews.migrations/
-users.migrations/
+reviews/migrations/
+users/migrations/
 venv_yam/

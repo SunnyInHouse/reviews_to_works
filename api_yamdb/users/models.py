@@ -2,9 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 ROLE_CHOICES = (
-    ('user', 'пользователь'),
-    ('moderator', 'модератор'),
-    ('admin', 'администратор'),
+    ("user", "пользователь"),
+    ("moderator", "модератор"),
+    ("admin", "администратор"),
 )
 
 
@@ -19,7 +19,7 @@ class User(AbstractUser):
         "Адрес e-mail",
         unique=True,
         error_messages={
-            'unique': "Пользователь с указанным e-mail уже зарегистрирован.",
+            "unique": "Пользователь с указанным e-mail уже зарегистрирован.",
         },
     )
     bio = models.TextField(
@@ -34,16 +34,15 @@ class User(AbstractUser):
     )
 
     def __str__(self):
-        return f'{self.username} status {self.is_active}'
+        return f"{self.username} status {self.is_active}"
 
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
-        ordering = ("username", )
+        ordering = ("username",)
 
         constraints = [
             models.UniqueConstraint(
-                fields=['email', 'username'],
-                name='unique_username_email'
+                fields=["email", "username"], name="unique_username_email"
             )
         ]

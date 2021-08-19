@@ -8,16 +8,18 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('reviews', '0002_auto_20210818_0600'),
+        ("reviews", "0002_auto_20210818_0600"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='review',
-            unique_together={('title', 'author')},
+            name="review",
+            unique_together={("title", "author")},
         ),
         migrations.AddConstraint(
-            model_name='review',
-            constraint=models.UniqueConstraint(fields=('title', 'author'), name='unique_title_author'),
+            model_name="review",
+            constraint=models.UniqueConstraint(
+                fields=("title", "author"), name="unique_title_author"
+            ),
         ),
     ]

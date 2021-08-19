@@ -4,13 +4,12 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
+from reviews.models import Category, Comments, Genre, Review, Title
 from users.models import ROLE_CHOICES, User
-from reviews.models import Review, Comments, Title, Genre, Category
 
 
 class AuthSerializer(serializers.ModelSerializer):
@@ -23,13 +22,14 @@ class AuthSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email')
+        fields = ("username", "email")
         validators = [
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
-                fields=('username', 'email'),
-                message=('Задано не уникальное сочетание полей email '
-                         'и username.')
+                fields=("username", "email"),
+                message=(
+                    "Задано не уникальное сочетание полей email " "и username."
+                ),
             )
         ]
 
@@ -38,20 +38,24 @@ class AuthSerializer(serializers.ModelSerializer):
         confirmation_code = default_token_generator.make_token(user)
         # отправляем письмо пользователю
         send_mail(
-            subject='Код подтверждения регистрации',
-            message=(f'Код подтверждения регистрации ниже \n '
-                     f'{confirmation_code}. \n Имя пользователя '
-                     f'{validated_data}'),
-            from_email='admin@yamdb.ru',
-            recipient_list=[validated_data['email'], ],
+            subject="Код подтверждения регистрации",
+            message=(
+                f"Код подтверждения регистрации ниже \n "
+                f"{confirmation_code}. \n Имя пользователя "
+                f"{validated_data}"
+            ),
+            from_email="admin@yamdb.ru",
+            recipient_list=[
+                validated_data["email"],
+            ],
         )
         return user
 
     def validate_username(self, value):
         # проверяем что в поле user передано не me
-        if value == 'me':
+        if value == "me":
             raise serializers.ValidationError(
-                'Нельзя использовать для username имя me.'
+                "Нельзя использовать для username имя me."
             )
         return value
 
@@ -61,12 +65,12 @@ class TokenDataSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField()
 
     def validate(self, data):
-        user = get_object_or_404(User, username=data['username'])
+        user = get_object_or_404(User, username=data["username"])
         if not default_token_generator.check_token(
-            user, data['confirmation_code']
+            user, data["confirmation_code"]
         ):
             raise serializers.ValidationError(
-                'Неверный код подтверждения для указанного username'
+                "Неверный код подтверждения для указанного username"
             )
         user.is_active = True
         user.save()
@@ -85,23 +89,34 @@ class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "bio",
+            "role",
         )
-        read_only_field = ('first_name', 'last_name', 'bio', 'role', )
+        read_only_field = (
+            "first_name",
+            "last_name",
+            "bio",
+            "role",
+        )
         validators = [
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
-                fields=('username', 'email'),
-                message=('Задано не уникальное сочетание полей email '
-                         'и username.')
+                fields=("username", "email"),
+                message=(
+                    "Задано не уникальное сочетание полей email " "и username."
+                ),
             )
         ]
 
     def validate_username(self, value):
         # проверяем что в поле user передано не me
-        if value == 'me':
+        if value == "me":
             raise serializers.ValidationError(
-                'Нельзя использовать для username имя me.'
+                "Нельзя использовать для username имя me."
             )
         return value
 
@@ -110,24 +125,24 @@ class GenreSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
         max_length=50,
-        validators=[UniqueValidator(queryset=Genre.objects.all())]
+        validators=[UniqueValidator(queryset=Genre.objects.all())],
     )
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        fields = ("name", "slug")
 
 
 class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
         max_length=50,
-        validators=[UniqueValidator(queryset=Category.objects.all())]
+        validators=[UniqueValidator(queryset=Category.objects.all())],
     )
 
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        fields = ("name", "slug")
 
 
 class TitleSerializerList(serializers.ModelSerializer):
@@ -151,62 +166,56 @@ class TitleSerializerList(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category', 'rating')
+        fields = (
+            "id",
+            "name",
+            "year",
+            "description",
+            "genre",
+            "category",
+            "rating",
+        )
 
 
 class TitleSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
-    genre = serializers.SlugRelatedField(slug_field='slug',
-                                         queryset=Genre.objects.all(),
-                                         many=True)
-    category = serializers.SlugRelatedField(slug_field='slug',
-                                            queryset=Category.objects.all())
+    genre = serializers.SlugRelatedField(
+        slug_field="slug", queryset=Genre.objects.all(), many=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field="slug", queryset=Category.objects.all()
+    )
 
     class Meta:
         model = Title
-        fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category', 'rating'
-        )
+        fields = ("id", "name", "year", "description", "genre", "category")
 
     def validate_year(self, value):
         year = dt.date.today().year
         if value > year:
-            raise serializers.ValidationError('Проверьте год!')
+            raise serializers.ValidationError("Проверьте год!")
         return value
-
-    # def get_rating(self, obj):
-    #
-    #     reviews = Review.objects.filter(title__name=obj.name)
-    #     print('reviews = ', reviews)
-    #
-    #     print('self = ', self)
-    #     print('obj = ', obj)
-    #
-    #     rating = 0
-    #     length = len(reviews)
-    #
-    #     if rating > 0:
-    #         for i in reviews:
-    #             rating += i['score']
-    #         rating //= length
-    #         return rating
-    #     return -9999
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field="username", read_only=True,
-                            default=serializers.CurrentUserDefault())
+    author = SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+        default=serializers.CurrentUserDefault(),
+    )
 
     class Meta:
-        fields = ('id', 'author', 'score', 'text', 'pub_date')
+        fields = ("id", "author", "score", "text", "pub_date")
         model = Review
 
     def validate(self, data):
-        if self.context["request"].method == 'POST':
-            title = self.context.get('view').kwargs['title_id']
+        if self.context["request"].method == "POST":
+            title = self.context.get("view").kwargs["title_id"]
             user = self.context["request"].user
             if user.reviews.filter(title__id=title).exists():
-                raise ValidationError('Нельзя публиковать более 1 отзыва на произведение')
+                raise ValidationError(
+                    "Нельзя публиковать более 1 отзыва на произведение"
+                )
         return data
 
     def validate_score(self, value):

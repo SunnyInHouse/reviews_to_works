@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+
 from users.models import User
 
 
@@ -23,24 +24,29 @@ class Title(models.Model):
     name = models.TextField()
     year = models.IntegerField()
     description = models.TextField(blank=True, null=True)
-    genre = models.ManyToManyField(Genre, through='GenreTitle', blank=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL,
-                                 null=True)
+    genre = models.ManyToManyField(Genre, through="GenreTitle", blank=True)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True
+    )
     rating = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        ordering = ['-id']
+        ordering = ["-id"]
 
     def __str__(self):
         return self.name
 
 
 class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, related_name='genre_title')
-    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name='title_genre')
+    genre = models.ForeignKey(
+        Genre, on_delete=models.SET_NULL, null=True, related_name="genre_title"
+    )
+    title = models.ForeignKey(
+        Title, on_delete=models.CASCADE, related_name="title_genre"
+    )
 
     def __str__(self):
-        return f'{self.genre} {self.title}'
+        return f"{self.genre} {self.title}"
 
 
 class Review(models.Model):
@@ -65,8 +71,7 @@ class Review(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['title', 'author'],
-                name='unique_title_author'
+                fields=["title", "author"], name="unique_title_author"
             )
         ]
 

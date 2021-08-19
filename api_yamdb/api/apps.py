@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class ApiConfig(AppConfig):
-    name = 'api'
-    verbose_name = 'API проекта YaMDb'
+    name = "api"
+    verbose_name = "API проекта YaMDb"
