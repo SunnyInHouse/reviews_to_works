@@ -134,10 +134,24 @@ class TitleSerializerList(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
+    rating = serializers.SerializerMethodField()
+
+    def get_rating(self, obj):
+
+        reviews = Review.objects.filter(title__name=obj.name)
+        rating = 0
+        length = len(reviews)
+
+        if length > 0:
+            for i in reviews:
+                rating += i.score
+            rating //= length
+            return rating
+        return None
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category', 'rating')
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -147,8 +161,6 @@ class TitleSerializer(serializers.ModelSerializer):
                                          many=True)
     category = serializers.SlugRelatedField(slug_field='slug',
                                             queryset=Category.objects.all())
-
-    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
@@ -162,23 +174,23 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Проверьте год!')
         return value
 
-    def get_rating(self, obj):
-
-        reviews = Review.objects.filter(title__name=obj)
-        print('reviews = ', reviews)
-
-        print('self = ', self)
-        print('obj = ', obj)
-
-        rating = 0
-        length = len(reviews)
-
-        if rating > 0:
-            for i in reviews:
-                rating += i['score']
-            rating //= length
-            return rating
-        return -9999
+    # def get_rating(self, obj):
+    #
+    #     reviews = Review.objects.filter(title__name=obj.name)
+    #     print('reviews = ', reviews)
+    #
+    #     print('self = ', self)
+    #     print('obj = ', obj)
+    #
+    #     rating = 0
+    #     length = len(reviews)
+    #
+    #     if rating > 0:
+    #         for i in reviews:
+    #             rating += i['score']
+    #         rating //= length
+    #         return rating
+    #     return -9999
 
 
 class ReviewsSerializer(serializers.ModelSerializer):

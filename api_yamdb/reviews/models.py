@@ -26,6 +26,7 @@ class Title(models.Model):
     genre = models.ManyToManyField(Genre, through='GenreTitle', blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,
                                  null=True)
+    rating = models.IntegerField(blank=True, null=True)
 
     class Meta:
         ordering = ['-id']

@@ -104,6 +104,10 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        print('self = ', self)
+        print('serializer = ', serializer.validated_data['score'])
+        title.rating = serializer.validated_data['score']
+        title.save()
         serializer.save(author=self.request.user, title=title)
 
 
