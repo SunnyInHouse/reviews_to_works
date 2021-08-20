@@ -201,14 +201,16 @@ class ReviewsSerializer(serializers.ModelSerializer):
         fields = ("id", "author", "score", "text", "pub_date")
         model = Review
 
+
+class ReviewsSerializerPost(ReviewsSerializer):
+
     def validate(self, data):
-        if self.context["request"].method == "POST":
-            title = self.context.get("view").kwargs["title_id"]
-            user = self.context["request"].user
-            if user.reviews.filter(title__id=title).exists():
-                raise ValidationError(
-                    "Нельзя публиковать более 1 отзыва на произведение"
-                )
+        title = self.context.get("view").kwargs["title_id"]
+        user = self.context["request"].user
+        if user.reviews.filter(title__id=title).exists():
+            raise ValidationError(
+                "Нельзя публиковать более 1 отзыва на произведение"
+            )
         return data
 
     def validate_score(self, value):

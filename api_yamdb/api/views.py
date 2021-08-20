@@ -31,7 +31,7 @@ from .serializers import (
     TitleSerializer,
     TitleSerializerList,
     TokenDataSerializer,
-    UsersSerializer,
+    UsersSerializer, ReviewsSerializerPost,
 )
 
 
@@ -106,6 +106,11 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
     authentication_classes = (JWTAuthentication,)
     pagination_class = pagination.PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return ReviewsSerializerPost
+        return ReviewsSerializer
 
     def get_permissions(self):
         if self.action == "retrieve":
