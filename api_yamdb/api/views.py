@@ -28,7 +28,7 @@ from .serializers import (
     GenreSerializer,
     ReviewsSerializer,
     TitleSerializer,
-    TitleSerializerList,
+    # TitleSerializerList,
     TokenDataSerializer,
     UsersSerializer,
 )
@@ -202,9 +202,3 @@ class TitleViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(year=year_in_query)
         return queryset
 
-    def get_serializer_class(self):
-        if self.action == "list":
-            return TitleSerializerList
-        elif self.action == "retrieve":
-            return TitleSerializerList
-        return TitleSerializer
