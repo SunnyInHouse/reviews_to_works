@@ -10,15 +10,15 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from reviews.models import Category, Comments, Genre, Review, Title
-from users.models import ROLE_CHOICES, User
+from users.models import User #Role
 
 
 class AuthSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
     email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
 
     class Meta:
@@ -79,12 +79,17 @@ class TokenDataSerializer(serializers.Serializer):
 
 
 class UsersSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(choices=ROLE_CHOICES, required=False)
+    role = serializers.ChoiceField(
+        choices=User.ROLE_CHOICES,
+        #choices=Role.choices,
+        required=False,
+        # default=User.USER, #added
+    )
     username = serializers.CharField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
     email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
 
     class Meta:
@@ -144,50 +149,71 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ("name", "slug")
 
 
-class TitleSerializerList(serializers.ModelSerializer):
-    description = serializers.CharField(required=False)
-    genre = GenreSerializer(many=True, read_only=True)
-    category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Title
-        fields = (
-            "id",
-            "name",
-            "year",
-            "description",
-            "genre",
-            "category",
-            "rating",
-        )
+# class TitleSerializerList(serializers.ModelSerializer):
+#     description = serializers.CharField(required=False)
+#     genre = GenreSerializer(
+#         many=True,
+#         read_only=True,
+#     )
+#     category = CategorySerializer(read_only=True)
+#     rating = serializers.SerializerMethodField()
 
-    def get_rating(self, obj):
-        title = Title.objects.filter(name=obj.name).annotate(
-        rating=Avg('reviews__score')
-    )[0]
+#     def get_rating(self, obj):
+#         reviews = Review.objects.filter(title__name=obj.name)
+#         rating = 0
+#         length = len(reviews)
 
-        return title.rating
+#         if length > 0:
+#             for i in reviews:
+#                 rating += i.score
+#             rating //= length
+#             return rating
+
+#         return None
+
+#     class Meta:
+#         model = Title
+#         fields = (
+#             "id",
+#             "name",
+#             "year",
+#             "description",
+#             "genre",
+#             "category",
+#             "rating",
+#         )
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    description = serializers.CharField(required=False)
-    genre = serializers.SlugRelatedField(
-        slug_field="slug", queryset=Genre.objects.all(), many=True
-    )
-    category = serializers.SlugRelatedField(
-        slug_field="slug", queryset=Category.objects.all()
-    )
+# class TitleSerializer(serializers.ModelSerializer):
+#     description = serializers.CharField(required=False)
+#     genre = serializers.SlugRelatedField(
+#         slug_field="slug",
+#         queryset=Genre.objects.all(),
+#         many=True,
+#     )
+#     category = serializers.SlugRelatedField(
+#         slug_field="slug",
+#         queryset=Category.objects.all(),
+#     )
 
-    class Meta:
-        model = Title
-        fields = ("id", "name", "year", "description", "genre", "category")
+#     class Meta:
+#         model = Title
+#         fields = (
+#             "id",
+#             "name",
+#             "year",
+#             "description",
+#             "genre",
+#             "category",
+#         )
 
-    def validate_year(self, value):
-        year = dt.date.today().year
-        if value > year:
-            raise serializers.ValidationError("Проверьте год!")
-        return value
+#     def validate_year(self, value):
+#         year = dt.date.today().year
+#         if value > year:
+#             raise serializers.ValidationError("Проверьте год!")
+#         return value
+
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
@@ -198,8 +224,14 @@ class ReviewsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ("id", "author", "score", "text", "pub_date")
         model = Review
+        fields = (
+            "id",
+            "author",
+            "score",
+            "text",
+            "pub_date",
+        )
 
 
 class ReviewsSerializerPost(ReviewsSerializer):
@@ -222,9 +254,96 @@ class ReviewsSerializerPost(ReviewsSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field="username", read_only=True)
+    author = SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+    )
     review = ReviewsSerializer(read_only=True)
 
     class Meta:
-        fields = "__all__"
         model = Comments
+        fields = (
+            "id",
+            "author",
+            "review",
+            "text",
+            "pub_date",
+        )
+
+
+# class GenreField(serializers.RelatedField):
+
+#     def to_internal_value(self, data):
+#         if len(data) == 0:
+#             raise serializers.ValidationError('Поле genre должно быть заполнено')
+#         genres = []
+#         for i in data:
+#             if i not in Genre.objects.values_list('slug', flat=True):
+#                 raise serializers.ValidationError('В поле genre необходимо указать уже существующий жанр. Указанный жанр не существует.')
+#             genres.append(
+#                 {
+#                     "name": Genre.objects.get(slug=i).name,
+#                     "slug": i
+#                 }
+#             )
+#         return genres
+    
+#     def to_representation(self, value):
+#         return GenreSerializer(value, many=True).data
+
+
+# class CategoryField(serializers.RelatedField):
+#     def to_internal_value(self, data):
+#         if data not in Category.objects.values_list('slug', flat=True):
+#             raise serializers.ValidationError('В поле category необходимо указать уже существующую категорию. Указанной категории не существует.')
+#         return {
+#                 "name": Category.objects.get(slug=data).name,
+#                 "slug": data
+#         }
+    
+#     def to_representation(self, value):
+#         return CategorySerializer(value).data
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
+    description = serializers.CharField(required=False)
+    genre = serializers.SlugRelatedField(
+        slug_field="slug",
+        queryset=Genre.objects.all(),
+        many=True,
+    )
+    category = serializers.SlugRelatedField(
+        slug_field="slug",
+        queryset=Category.objects.all(),
+    )
+
+    class Meta:
+        model = Title
+        fields = (
+            "id",
+            "name",
+            "year",
+            "description",
+            "genre",
+            "category",
+            "rating",
+        )
+    
+     def get_rating(self, obj):
+        title = Title.objects.filter(name=obj.name).annotate(
+          rating=Avg('reviews__score'))[0]
+
+        return title.rating
+
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if value > year:
+            raise serializers.ValidationError("Проверьте год!")
+        return value
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['genre'] = GenreSerializer(instance.genre, many=True).data
+        response['category'] = CategorySerializer(instance.category).data
+        return response

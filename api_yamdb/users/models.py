@@ -1,19 +1,25 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-ROLE_CHOICES = (
-    ("user", "пользователь"),
-    ("moderator", "модератор"),
-    ("admin", "администратор"),
-)
+from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
-    # password = None
-    # is_staff = None
-    # is_active = None
-    # is_superuser = None
-    # date_joined = None
+
+    USER = "user"
+    MODERATOR = "moderator"
+    ADMIN = "admin"
+
+    ROLE_CHOICES = (
+        (USER, "пользователь"),
+        (MODERATOR, "модератор"),
+        (ADMIN, "администратор"),
+    )
+
+    # class Role(models.TextChoices):
+    #     ADMIN = "admin", _("администратор")
+    #     MODERATOR = "moderator", _("модератор")
+    #     USER = "user", _("пользователь")
+
 
     email = models.EmailField(
         "Адрес e-mail",
@@ -29,20 +35,37 @@ class User(AbstractUser):
     role = models.CharField(
         "Роль пользователя",
         choices=ROLE_CHOICES,
+        # choices = Role.choices,
         max_length=15,
-        default="user",
+        default=USER,
+        # default = Role.USER,
     )
-
-    def __str__(self):
-        return f"{self.username} status {self.is_active}"
 
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
         ordering = ("username",)
 
-        constraints = [
-            models.UniqueConstraint(
-                fields=["email", "username"], name="unique_username_email"
-            )
-        ]
+# это ограничение не актуально, тк и так оба парметры уникальны
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=["email", "username"],
+        #         name="unique_username_email"
+        #     )
+        # ]
+
+# этот метод не нужен, тк уже определен в abstractUser
+    # def __str__(self):
+    #     return f"{self.username}"
+ # ADDED METHODS
+    @property
+    def is_admin(self, request):
+        return request.user.role == self.ADMIN
+    
+    @property
+    def is_moderator(self, request):
+        return request.user.role == self.MODERATOR
+    
+    @property
+    def is_user(self, request):
+        return request.user.role == self.USER
