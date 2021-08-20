@@ -16,6 +16,10 @@ class Category(models.Model):
 
     def __str__(self):
         return self.slug
+    
+    class Meta:
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
 
 
 class Genre(models.Model):
@@ -31,6 +35,10 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.slug
+    
+    class Meta:
+        verbose_name = "Жанр"
+        verbose_name_plural = "Жанры"
 
 
 class Title(models.Model):
@@ -45,11 +53,11 @@ class Title(models.Model):
         blank=True,
         null=True,
     )
-    genre = models.ManyToManyField(
+    genres = models.ManyToManyField( #было genre
         Genre,
         through="GenreTitle",
-        blank=True,
-        verbose_name="Жанр",
+        # blank=True, у ManyToManyField нет такого параметра
+        verbose_name="Жанры", # было Жанр
     )
     category = models.ForeignKey(
         Category,
@@ -68,12 +76,16 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        verbose_name = "Произведение"
+        verbose_name_plural = "Произведения"
 
 
 class GenreTitle(models.Model):
     genre = models.ForeignKey(
         Genre,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         verbose_name="Жанр",
         related_name="genre_title",
@@ -87,13 +99,17 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return f"{self.genre} {self.title}"
+    
+    # class Meta:
+    #     verbose_name = "Категория"
+    #     verbose_name_plural = "Категории"
 
 
 class Review(models.Model):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        verbose_name="Отзывы",
+        verbose_name="Название произведения, к которому создан отзыв",
         related_name="reviews",
     )
     author = models.ForeignKey(
@@ -113,6 +129,9 @@ class Review(models.Model):
         auto_now_add=True,
     )
 
+    def __str__(self):
+        return f"Ревью на {self.title}, автор {self.author}"
+    
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -120,9 +139,8 @@ class Review(models.Model):
                 name="unique_title_author"
             )
         ]
-
-    def __str__(self):
-        return f"Ревью на {self.title}, автор {self.author}"
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
 
 
 class Comments(models.Model):
@@ -148,3 +166,7 @@ class Comments(models.Model):
 
     def __str__(self):
         return f"Комментарий к отзыву {self.review}, автор {self.author}"
+    
+    class Meta:
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
