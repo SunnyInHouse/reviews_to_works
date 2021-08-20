@@ -20,7 +20,7 @@ from .permissions import (
     OnlyAdmin,
     OnlyOwnAccount,
     OwnerOrReadOnlyList,
-    ReadOnly,
+    ReadOnly, AdminOrModerator,
 )
 from .serializers import (
     AuthSerializer,
@@ -103,7 +103,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
-    permission_classes = (OwnerOrReadOnlyList,)
+    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
     authentication_classes = (JWTAuthentication,)
     pagination_class = pagination.PageNumberPagination
 
@@ -127,7 +127,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (OwnerOrReadOnlyList,)
+    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
     authentication_classes = (JWTAuthentication,)
     pagination_class = pagination.PageNumberPagination
 
