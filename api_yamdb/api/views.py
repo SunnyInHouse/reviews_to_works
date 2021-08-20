@@ -19,7 +19,7 @@ from .permissions import (
     OnlyAdmin,
     OnlyOwnAccount,
     OwnerOrReadOnlyList,
-    ReadOnly,
+    ReadOnly, AdminOrModerator,
 )
 from .serializers import (
     AuthSerializer,
@@ -30,7 +30,7 @@ from .serializers import (
     TitleSerializer,
     # TitleSerializerList,
     TokenDataSerializer,
-    UsersSerializer,
+    UsersSerializer, ReviewsSerializerPost,
 )
 
 
@@ -111,29 +111,31 @@ class UsersViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList,)
+    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
     pagination_class = pagination.PageNumberPagination
 
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return ReviewsSerializerPost
+        return ReviewsSerializer
+
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        title = self.get_title()
         return title.reviews.all()
 
-    def get_permissions(self):
-        if self.action == "retrieve":
-            return (ReadOnly(),)
-        return super().get_permissions()
-
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
-        title.rating = serializer.validated_data["score"]
-        title.save()
+        title = self.get_title()
         serializer.save(author=self.request.user, title=title)
+
+    def get_title(self):
+        return get_object_or_404(Title, pk=self.kwargs.get("title_id"))
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList,)
+    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
     pagination_class = pagination.PageNumberPagination
 
     def get_queryset(self):
@@ -142,7 +144,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
             pk=self.kwargs.get("review_id"),
             title__pk=self.kwargs.get("title_id"),
         )
-        return review.comment.all()
+        return review.comments.all()
 
     def get_permissions(self):
         if self.action == "retrieve":

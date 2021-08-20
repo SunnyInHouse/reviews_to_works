@@ -3,6 +3,7 @@ import datetime as dt
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -127,10 +128,9 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
         max_length=50,
-        validators=[UniqueValidator(queryset=Genre.objects.all())],
+        validators=[UniqueValidator(queryset=Genre.objects.all())], # №11. валидатор должен работать корректно. Перепроверил по документации.
     )
 
     class Meta:
@@ -139,7 +139,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
         max_length=50,
         validators=[UniqueValidator(queryset=Category.objects.all())],
@@ -148,6 +147,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ("name", "slug")
+
 
 
 # class TitleSerializerList(serializers.ModelSerializer):
@@ -215,6 +215,7 @@ class CategorySerializer(serializers.ModelSerializer):
 #         return value
 
 
+
 class ReviewsSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(
         slug_field="username",
@@ -232,14 +233,16 @@ class ReviewsSerializer(serializers.ModelSerializer):
             "pub_date",
         )
 
+
+class ReviewsSerializerPost(ReviewsSerializer):
+
     def validate(self, data):
-        if self.context["request"].method == "POST":
-            title = self.context.get("view").kwargs["title_id"]
-            user = self.context["request"].user
-            if user.reviews.filter(title__id=title).exists():
-                raise ValidationError(
-                    "Нельзя публиковать более 1 отзыва на произведение"
-                )
+        title = self.context.get("view").kwargs["title_id"]
+        user = self.context["request"].user
+        if user.reviews.filter(title__id=title).exists():
+            raise ValidationError(
+                "Нельзя публиковать более 1 отзыва на произведение"
+            )
         return data
 
     def validate_score(self, value):
@@ -327,18 +330,11 @@ class TitleSerializer(serializers.ModelSerializer):
             "rating",
         )
     
-    def get_rating(self, obj):
-        reviews = Review.objects.filter(title__name=obj.name)
-        rating = 0
-        length = len(reviews)
+     def get_rating(self, obj):
+        title = Title.objects.filter(name=obj.name).annotate(
+          rating=Avg('reviews__score'))[0]
 
-        if length > 0:
-            for i in reviews:
-                rating += i.score
-            rating //= length
-            return rating
-
-        return None
+        return title.rating
 
     def validate_year(self, value):
         year = dt.date.today().year
