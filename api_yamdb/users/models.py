@@ -1,11 +1,18 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-ROLE_CHOICES = (
-    ("user", "пользователь"),
-    ("moderator", "модератор"),
-    ("admin", "администратор"),
-)
+
+# ROLE_CHOICES = (
+#     ("user", "пользователь"),
+#     ("moderator", "модератор"),
+#     ("admin", "администратор"),
+# )
+class Role(models.TextChoices):
+    ADMIN = "admin", _("администратор")
+    MODERATOR = "moderator", _("модератор")
+    USER = "user", _("пользователь")
+
 
 
 class User(AbstractUser):
@@ -28,9 +35,11 @@ class User(AbstractUser):
     )
     role = models.CharField(
         "Роль пользователя",
-        choices=ROLE_CHOICES,
+        #choices=ROLE_CHOICES,
+        choices = Role.choices,
         max_length=15,
-        default="user",
+        #default="user",
+        default = Role.USER,
     )
 
     class Meta:
@@ -38,12 +47,26 @@ class User(AbstractUser):
         verbose_name_plural = "Пользователи"
         ordering = ("username",)
 
-        constraints = [
-            models.UniqueConstraint(
-                fields=["email", "username"],
-                name="unique_username_email"
-            )
-        ]
+# это ограничение не актуально, тк и так оба парметры уникальны
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=["email", "username"],
+        #         name="unique_username_email"
+        #     )
+        # ]
 
-    def __str__(self):
-        return f"{self.username}"
+# этот метод не нужен, тк уже определен в abstractUser
+    # def __str__(self):
+    #     return f"{self.username}"
+ # ADDED METHODS
+    @property
+    def is_admin(self, request):
+        return request.user.role == Role.ADMIN
+    
+    @property
+    def is_moderator(self, request):
+        return request.user.role == Role.MODERATOR
+    
+    @property
+    def is_user(self, request):
+        return request.user.role == Role.USER

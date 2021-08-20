@@ -78,22 +78,32 @@ class UsersViewSet(viewsets.ModelViewSet):
         permission_classes=(OnlyOwnAccount,),
     )
     def me(self, request):
-        user = User.objects.get(username=self.request.user.username)
+        user = request.user
+        # user = User.objects.get(username=self.request.user.username)
 
         if request.method == "GET":
             serializer = self.get_serializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        # if request.method == "PATCH":
+        #     serializer = self.get_serializer(
+        #         user, data=request.data, partial=True
+        #     )
+        #     if serializer.is_valid():
+        #         if "role" in serializer.validated_data:
+        #             if user.role == "user":
+        #                 serializer.validated_data["role"] = "user"
+        #         serializer.save()
+        #         return Response(serializer.data, status=status.HTTP_200_OK)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if request.method == "PATCH":
             serializer = self.get_serializer(
                 user, data=request.data, partial=True
             )
-            if serializer.is_valid():
-                if "role" in serializer.validated_data:
-                    if user.role == "user":
-                        serializer.validated_data["role"] = "user"
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

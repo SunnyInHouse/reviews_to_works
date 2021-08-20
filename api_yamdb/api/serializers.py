@@ -9,7 +9,7 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from reviews.models import Category, Comments, Genre, Review, Title
-from users.models import ROLE_CHOICES, User
+from users.models import Role, User
 
 
 class AuthSerializer(serializers.ModelSerializer):
@@ -79,8 +79,10 @@ class TokenDataSerializer(serializers.Serializer):
 
 class UsersSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(
-        choices=ROLE_CHOICES,
+        #choices=ROLE_CHIOCES,
+        choices=Role.choices,
         required=False,
+        default=Role.USER, #added
     )
     username = serializers.CharField(
         validators=[UniqueValidator(queryset=User.objects.all())],
