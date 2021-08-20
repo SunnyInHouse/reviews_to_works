@@ -28,7 +28,6 @@ class Title(models.Model):
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, null=True
     )
-    rating = models.IntegerField(blank=True, null=True)
 
     class Meta:
         ordering = ["-id"]

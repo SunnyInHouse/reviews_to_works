@@ -3,6 +3,7 @@ import datetime as dt
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -149,19 +150,6 @@ class TitleSerializerList(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     rating = serializers.SerializerMethodField()
 
-    def get_rating(self, obj):
-
-        reviews = Review.objects.filter(title__name=obj.name)
-        rating = 0
-        length = len(reviews)
-
-        if length > 0:
-            for i in reviews:
-                rating += i.score
-            rating //= length
-            return rating
-        return None
-
     class Meta:
         model = Title
         fields = (
@@ -173,6 +161,13 @@ class TitleSerializerList(serializers.ModelSerializer):
             "category",
             "rating",
         )
+
+    def get_rating(self, obj):
+        title = Title.objects.filter(name=obj.name).annotate(
+        rating=Avg('reviews__score')
+    )[0]
+
+        return title.rating
 
 
 class TitleSerializer(serializers.ModelSerializer):
