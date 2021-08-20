@@ -57,6 +57,8 @@ class ReadOnly(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS
 
 
+# кто использовал данный метод во вьюсетах - его можно заменить на
+# использование (ReadOnly | OnlyAdmin, )
 class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:

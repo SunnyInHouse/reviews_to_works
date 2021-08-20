@@ -122,7 +122,6 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
         max_length=50,
         validators=[UniqueValidator(queryset=Genre.objects.all())],
