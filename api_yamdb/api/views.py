@@ -101,6 +101,8 @@ class UsersViewSet(viewsets.ModelViewSet):
             )
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if "role" in serializer.validated_data:
+                serializer.validated_data["role"] = request.user.role
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         

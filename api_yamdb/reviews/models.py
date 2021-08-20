@@ -53,7 +53,7 @@ class Title(models.Model):
         blank=True,
         null=True,
     )
-    genres = models.ManyToManyField( #было genre
+    genre = models.ManyToManyField( #было genre
         Genre,
         through="GenreTitle",
         # blank=True, у ManyToManyField нет такого параметра
