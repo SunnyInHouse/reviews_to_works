@@ -112,22 +112,16 @@ class ReviewsViewSet(viewsets.ModelViewSet):
             return ReviewsSerializerPost
         return ReviewsSerializer
 
-    def get_permissions(self):
-        if self.action == "retrieve":
-            return (ReadOnly(),)
-        return super().get_permissions()
-
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        title = self.get_title()
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
-        print("self = ", self)
-        print("serializer = ", serializer.validated_data["score"])
-        title.rating = serializer.validated_data["score"]
-        title.save()
+        title = self.get_title()
         serializer.save(author=self.request.user, title=title)
+
+    def get_title(self):
+        return get_object_or_404(Title, pk=self.kwargs.get("title_id"))
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
@@ -147,7 +141,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
             pk=self.kwargs.get("review_id"),
             title__pk=self.kwargs.get("title_id"),
         )
-        return review.comment.all()
+        return review.comments.all()
 
     def perform_create(self, serializer):
         review = get_object_or_404(
@@ -201,9 +195,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     search_fields = ("name", "year", "category__slug", "genre__slug")
 
     def get_serializer_class(self):
-        if self.action == "list":
-            return TitleSerializerList
-        elif self.action == "retrieve":
+        if self.action == "list" or self.action == "retrieve":
             return TitleSerializerList
         return TitleSerializer
 
