@@ -124,7 +124,7 @@ class UsersSerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(
         max_length=50,
-        validators=[UniqueValidator(queryset=Genre.objects.all())],
+        validators=[UniqueValidator(queryset=Genre.objects.all())], # №11. валидатор должен работать корректно. Перепроверил по документации.
     )
 
     class Meta:
@@ -133,7 +133,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=256)
     slug = serializers.SlugField(
         max_length=50,
         validators=[UniqueValidator(queryset=Category.objects.all())],
