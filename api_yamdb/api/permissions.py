@@ -55,13 +55,3 @@ class AdminOrModerator(permissions.BasePermission):
 class ReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS
-
-
-# №6 кто использовал данный метод во вьюсетах - его можно заменить на
-# использование (ReadOnly | OnlyAdmin, ) и тогда данный класс можно удалить
-class IsAdminOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return request.method in permissions.SAFE_METHODS
-
-        return request.user.role == "admin" or request.user.is_superuser

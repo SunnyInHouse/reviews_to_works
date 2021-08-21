@@ -1,4 +1,6 @@
+from api_yamdb.api.filters import TitleFilter
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters,
     mixins,
@@ -15,7 +17,6 @@ from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
 from .permissions import (
-    IsAdminOrReadOnly,
     OnlyAdmin,
     OnlyOwnAccount,
     OwnerOrReadOnlyList,
@@ -32,6 +33,7 @@ from .serializers import (
     TokenDataSerializer,
     UsersSerializer, ReviewsSerializerPost,
 )
+from .filters import TitleFilter
 
 
 class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -105,7 +107,6 @@ class UsersViewSet(viewsets.ModelViewSet):
                 serializer.validated_data["role"] = request.user.role
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
@@ -113,7 +114,6 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
     pagination_class = pagination.PageNumberPagination
-
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -170,10 +170,15 @@ class GenreViewSet(
     serializer_class = GenreSerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (OnlyAdmin,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter, )
     search_fields = ("name",)
+
+    def get_permissions(self):
+        if self.action == 'retrieve' or self.action == 'list':
+            return (ReadOnly(),)
+        return super().get_permissions()
 
 
 class CategoryViewSet(
@@ -186,18 +191,25 @@ class CategoryViewSet(
     serializer_class = CategorySerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (OnlyAdmin,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
+
+    def get_permissions(self):
+        if self.action == 'retrieve' or self.action == 'list':
+            return (ReadOnly(),)
+        return super().get_permissions()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (OnlyAdmin,)
     pagination_class = pagination.PageNumberPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
     def get_queryset(self):
         queryset = Title.objects.all()
@@ -216,3 +228,7 @@ class TitleViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(year=year_in_query)
         return queryset
 
+    def get_permissions(self):
+        if self.action == 'retrieve' or self.action == 'list':
+            return (ReadOnly(),)
+        return super().get_permissions()
