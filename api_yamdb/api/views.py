@@ -51,15 +51,14 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 @api_view(["POST", ])
 def get_jwt_token(request):
     serializer = TokenDataSerializer(data=request.data)
-    if serializer.is_valid():
-        user = User.objects.get(username=serializer.validated_data["username"])
-        user.is_active = True
-        user.save()
-        token = RefreshToken.for_user(user)
-        return Response(
-            {"token": str(token.access_token)}, status=status.HTTP_200_OK
-        )
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    user = get_object_or_404(User, username=serializer.validated_data["username"])
+    token = RefreshToken.for_user(user)
+    return Response(
+        {"token": str(token.access_token)}, status=status.HTTP_200_OK
+    )
+    
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -101,9 +100,9 @@ class UsersViewSet(viewsets.ModelViewSet):
             )
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            if "role" in serializer.validated_data:
-                serializer.validated_data["role"] = request.user.role
-            serializer.save()
+            # if "role" in serializer.validated_data:
+            #     serializer.validated_data["role"] = request.user.role
+            serializer.save(role=user.role)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
 
