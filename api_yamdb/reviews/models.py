@@ -16,7 +16,7 @@ class Category(models.Model):
 
     def __str__(self):
         return self.slug
-    
+
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
@@ -35,7 +35,7 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.slug
-    
+
     class Meta:
         verbose_name = "Жанр"
         verbose_name_plural = "Жанры"
@@ -53,11 +53,10 @@ class Title(models.Model):
         blank=True,
         null=True,
     )
-    genre = models.ManyToManyField( #было genre
+    genre = models.ManyToManyField(
         Genre,
         through="GenreTitle",
-        # blank=True, у ManyToManyField нет такого параметра
-        verbose_name="Жанры", # было Жанр
+        verbose_name="Жанры",
     )
     category = models.ForeignKey(
         Category,
@@ -65,21 +64,14 @@ class Title(models.Model):
         null=True,
         verbose_name="Категория",
     )
-    # rating = models.IntegerField(
-    #     "Рейтинг",
-    #     blank=True,
-    #     null=True,
-    # )
-
-    class Meta:
-        ordering = ["-id"]
 
     def __str__(self):
         return self.name
-    
+
     class Meta:
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
+        ordering = ["-id"]
 
 
 class GenreTitle(models.Model):
@@ -99,7 +91,7 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return f"{self.genre} {self.title}"
-    
+
     class Meta:
         verbose_name = "Связь жанра и произведения"
         verbose_name_plural = "Связи жанра и произведения"
@@ -131,7 +123,7 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Ревью на {self.title}, автор {self.author}"
-    
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -166,7 +158,7 @@ class Comments(models.Model):
 
     def __str__(self):
         return f"Комментарий к отзыву {self.review}, автор {self.author}"
-    
+
     class Meta:
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"

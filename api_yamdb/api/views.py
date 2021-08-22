@@ -16,10 +16,11 @@ from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
 from .permissions import (
+    AdminOrModerator,
     OnlyAdmin,
     OnlyOwnAccount,
     OwnerOrReadOnlyList,
-    ReadOnly, AdminOrModerator,
+    ReadOnly,
 )
 from .serializers import (
     AuthSerializer,
@@ -27,10 +28,10 @@ from .serializers import (
     CommentSerializer,
     GenreSerializer,
     ReviewsSerializer,
+    ReviewsSerializerCreate,
     TitleSerializer,
-    # TitleSerializerList,
     TokenDataSerializer,
-    UsersSerializer, ReviewsSerializerPost,
+    UsersSerializer,
 )
 from .filters import TitleFilter
 
@@ -45,7 +46,9 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(
-            serializer.data, status=status.HTTP_200_OK, headers=headers
+            serializer.data,
+            status=status.HTTP_200_OK,
+            headers=headers
         )
 
 
@@ -54,12 +57,12 @@ def get_jwt_token(request):
     serializer = TokenDataSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    user = get_object_or_404(User, username=serializer.validated_data["username"])
+    user = get_object_or_404(User, username=request.user)
     token = RefreshToken.for_user(user)
     return Response(
-        {"token": str(token.access_token)}, status=status.HTTP_200_OK
+        {"token": str(token.access_token)},
+        status=status.HTTP_200_OK
     )
-    
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -79,32 +82,21 @@ class UsersViewSet(viewsets.ModelViewSet):
     )
     def me(self, request):
         user = request.user
-        # user = User.objects.get(username=self.request.user.username)
 
         if request.method == "GET":
             serializer = self.get_serializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        # if request.method == "PATCH":
-        #     serializer = self.get_serializer(
-        #         user, data=request.data, partial=True
-        #     )
-        #     if serializer.is_valid():
-        #         if "role" in serializer.validated_data:
-        #             if user.role == "user":
-        #                 serializer.validated_data["role"] = "user"
-        #         serializer.save()
-        #         return Response(serializer.data, status=status.HTTP_200_OK)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        if request.method == "PATCH":
-            serializer = self.get_serializer(
-                user, data=request.data, partial=True
+
+        serializer = self.get_serializer(
+            user, data=request.data, partial=True
+        )
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
             )
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            # if "role" in serializer.validated_data:
-            #     serializer.validated_data["role"] = request.user.role
-            serializer.save(role=user.role)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer.save(role=user.role)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
@@ -113,21 +105,22 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
     pagination_class = pagination.PageNumberPagination
 
-    def get_serializer_class(self):
-        if self.action == "create":
-            return ReviewsSerializerPost
-        return ReviewsSerializer
+    @property
+    def _get_title(self):
+        return get_object_or_404(Title, pk=self.kwargs.get("title_id"))
 
     def get_queryset(self):
-        title = self.get_title()
+        title = self._get_title
         return title.reviews.all()
 
-    def perform_create(self, serializer):
-        title = self.get_title()
-        serializer.save(author=self.request.user, title=title)
+    def get_serializer_class(self):
+        if self.action == "create":
+            return ReviewsSerializerCreate
+        return ReviewsSerializer
 
-    def get_title(self):
-        return get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+    def perform_create(self, serializer):
+        title = self._get_title
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
@@ -144,10 +137,10 @@ class CommentsViewSet(viewsets.ModelViewSet):
         )
         return review.comments.all()
 
-    def get_permissions(self):
-        if self.action == "retrieve":
-            return (ReadOnly(),)
-        return super().get_permissions()
+    # def get_permissions(self):
+    #     if self.action == "retrieve":
+    #         return (ReadOnly(),)
+    #     return super().get_permissions()
 
     def perform_create(self, serializer):
         review = get_object_or_404(
