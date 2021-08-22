@@ -327,10 +327,10 @@ class TitleSerializer(serializers.ModelSerializer):
             "category",
             "rating",
         )
-    
+
     def get_rating(self, obj):
         title = Title.objects.filter(name=obj.name).annotate(
-          rating=Avg('reviews__score'))[0]
+            rating=Avg('reviews__score'))[0]
 
         return title.rating
 
