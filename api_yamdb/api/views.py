@@ -60,7 +60,10 @@ def get_jwt_token(request):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-    user = get_object_or_404(User, username=request.user.username)
+    user = get_object_or_404(
+        User, 
+        username=serializer.validated_data["username"]
+    )
     token = RefreshToken.for_user(user)
     return Response(
         {"token": str(token.access_token)},
