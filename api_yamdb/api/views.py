@@ -1,4 +1,3 @@
-from api_yamdb.api.filters import TitleFilter
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
@@ -210,23 +209,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-
-    def get_queryset(self):
-        queryset = Title.objects.all()
-        genre_slug = self.request.query_params.get("genre")
-        category_slug = self.request.query_params.get("category")
-        name_in_query = self.request.query_params.get("name")
-        year_in_query = self.request.query_params.get("year")
-
-        if genre_slug:
-            queryset = queryset.filter(genre__slug=genre_slug)
-        elif category_slug:
-            queryset = queryset.filter(category__slug=category_slug)
-        elif name_in_query:
-            queryset = queryset.filter(name__contains=name_in_query)
-        elif year_in_query:
-            queryset = queryset.filter(year=year_in_query)
-        return queryset
 
     def get_permissions(self):
         if self.action == 'retrieve' or self.action == 'list':

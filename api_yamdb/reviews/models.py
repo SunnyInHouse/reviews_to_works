@@ -65,11 +65,11 @@ class Title(models.Model):
         null=True,
         verbose_name="Категория",
     )
-    rating = models.IntegerField(
-        "Рейтинг",
-        blank=True,
-        null=True,
-    )
+    # rating = models.IntegerField(
+    #     "Рейтинг",
+    #     blank=True,
+    #     null=True,
+    # )
 
     class Meta:
         ordering = ["-id"]
