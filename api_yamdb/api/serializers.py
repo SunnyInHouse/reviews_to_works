@@ -35,7 +35,7 @@ class AuthSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data, is_active=False)
+        user = User.objects.create_user(**validated_data)
         confirmation_code = default_token_generator.make_token(user)
         # отправляем письмо пользователю
         send_mail(
@@ -45,7 +45,7 @@ class AuthSerializer(serializers.ModelSerializer):
                 f"{confirmation_code}. \n Имя пользователя "
                 f"{validated_data}"
             ),
-            from_email="admin@yamdb.ru",
+            from_email=None, #"admin@yamdb.ru",
             recipient_list=[
                 validated_data["email"],
             ],
@@ -73,8 +73,6 @@ class TokenDataSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Неверный код подтверждения для указанного username"
             )
-        user.is_active = True
-        user.save()
         return data
 
 
