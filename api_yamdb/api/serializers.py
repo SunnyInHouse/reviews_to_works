@@ -156,9 +156,9 @@ class ReviewsSerializer(serializers.ModelSerializer):
         model = Review
         fields = (
             "id",
+            "text",
             "author",
             "score",
-            "text",
             "pub_date",
         )
 
@@ -187,15 +187,13 @@ class CommentSerializer(serializers.ModelSerializer):
         slug_field="username",
         read_only=True,
     )
-    review = ReviewsSerializer(read_only=True)
 
     class Meta:
         model = Comments
         fields = (
             "id",
-            "author",
-            "review",
             "text",
+            "author",
             "pub_date",
         )
 
