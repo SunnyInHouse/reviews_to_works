@@ -132,7 +132,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
+    permission_classes = ( OwnerOrReadOnlyList | AdminOrModerator,)
     pagination_class = pagination.PageNumberPagination
 
     def get_queryset(self):

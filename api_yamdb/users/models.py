@@ -14,9 +14,15 @@ class User(AbstractUser):
         (ADMIN, "администратор"),
     )
 
+    first_name = models.CharField(
+        "first name",
+        max_length=150,
+        blank=True
+    )
     email = models.EmailField(
         "Адрес e-mail",
         unique=True,
+        max_length=254,
         error_messages={
             "unique": "Пользователь с указанным e-mail уже зарегистрирован.",
         },
@@ -31,6 +37,7 @@ class User(AbstractUser):
         max_length=15,
         default=USER,
     )
+
 
     @property
     def is_admin(self):
