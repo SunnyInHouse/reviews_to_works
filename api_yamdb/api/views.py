@@ -56,7 +56,10 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 def get_jwt_token(request):
     serializer = TokenDataSerializer(data=request.data)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
     user = get_object_or_404(User, username=request.user)
     token = RefreshToken.for_user(user)
     return Response(
@@ -137,11 +140,6 @@ class CommentsViewSet(viewsets.ModelViewSet):
         )
         return review.comments.all()
 
-    # def get_permissions(self):
-    #     if self.action == "retrieve":
-    #         return (ReadOnly(),)
-    #     return super().get_permissions()
-
     def perform_create(self, serializer):
         review = get_object_or_404(
             Review,
@@ -167,7 +165,7 @@ class GenreViewSet(
     search_fields = ("name",)
 
     def get_permissions(self):
-        if self.action == 'retrieve' or self.action == 'list':
+        if self.action == 'list':
             return (ReadOnly(),)
         return super().get_permissions()
 
@@ -188,7 +186,7 @@ class CategoryViewSet(
     search_fields = ("name",)
 
     def get_permissions(self):
-        if self.action == 'retrieve' or self.action == 'list':
+        if self.action == 'list':
             return (ReadOnly(),)
         return super().get_permissions()
 
