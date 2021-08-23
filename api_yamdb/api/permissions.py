@@ -17,8 +17,8 @@ class OnlyAdmin(permissions.BasePermission):
 class OnlyOwnAccount(permissions.BasePermission):
     message = "Доступ разрешен только к своему аккаунту."
 
-    def has_permission(self, request, view):
-        return request.user.is_authenticated
+    # def has_permission(self, request, view):
+    #     return request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         return (request.user.is_authenticated
@@ -28,11 +28,11 @@ class OnlyOwnAccount(permissions.BasePermission):
 class OwnerOrReadOnlyList(permissions.BasePermission):
     message = "Изменение данных доступно только владельцу."
 
-    def has_permission(self, request, view):
-        return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-        )
+    # def has_permission(self, request, view):
+    #     return (
+    #         request.method in permissions.SAFE_METHODS
+    #         or request.user.is_authenticated
+    #     )
 
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
@@ -42,11 +42,9 @@ class OwnerOrReadOnlyList(permissions.BasePermission):
 class AdminOrModerator(permissions.BasePermission):
     message = "Доступ разрешен только администраторам и модераторам."
 
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        return True
-
+    # def has_permission(self, request, view):
+    #     return request.user.is_authenticated
+ 
     def has_object_permission(self, request, view, obj):
         return (
             request.user.is_admin

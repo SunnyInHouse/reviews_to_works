@@ -1,9 +1,12 @@
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters,
     mixins,
     pagination,
+    permissions as perm,
     status,
     viewsets,
 )
@@ -50,7 +53,23 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             status=status.HTTP_200_OK,
             headers=headers
         )
-
+    
+    def perform_create(self, serializer):
+        user = User.objects.create_user(**serializer.validated_data)
+        confirmation_code = default_token_generator.make_token(user)
+        # отправляем письмо пользователю
+        send_mail(
+            subject="Код подтверждения регистрации",
+            message=(
+                f"Код подтверждения регистрации ниже \n "
+                f"{confirmation_code}. \n Имя пользователя "
+                f"{serializer.validated_data['username']}"
+            ),
+            from_email=None,
+            recipient_list=[
+                serializer.validated_data["email"],
+            ],
+        )
 
 @api_view(["POST", ])
 def get_jwt_token(request):
@@ -84,7 +103,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["get", "patch"],
-        permission_classes=(OnlyOwnAccount,),
+        permission_classes=(OnlyOwnAccount&perm.IsAuthenticated,),
     )
     def me(self, request):
         user = request.user
@@ -108,7 +127,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
+    permission_classes = (OwnerOrReadOnlyList|AdminOrModerator&perm.IsAuthenticated&ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     @property
@@ -132,7 +151,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList|AdminOrModerator,)
+    permission_classes = (OwnerOrReadOnlyList|AdminOrModerator&perm.IsAuthenticated&ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     def get_queryset(self):
@@ -198,12 +217,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin,)
+    permission_classes = (OnlyAdmin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-
-    def get_permissions(self):
-        if self.action == 'retrieve' or self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
