@@ -112,11 +112,11 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.PageNumberPagination
 
     @property
-    def _get_title(self):
+    def _title(self):
         return get_object_or_404(Title, pk=self.kwargs.get("title_id"))
 
     def get_queryset(self):
-        title = self._get_title
+        title = self._title
         return title.reviews.all()
 
     def get_serializer_class(self):
@@ -125,14 +125,14 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         return ReviewsSerializer
 
     def perform_create(self, serializer):
-        title = self._get_title
+        title = self._title
         serializer.save(author=self.request.user, title=title)
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
+    permission_classes = (OwnerOrReadOnlyList|AdminOrModerator,)
     pagination_class = pagination.PageNumberPagination
 
     def get_queryset(self):
