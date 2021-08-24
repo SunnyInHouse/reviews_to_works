@@ -2,8 +2,6 @@ import datetime as dt
 
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
-from django.db.models import Avg, IntegerField
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -182,7 +180,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
     description = serializers.CharField(required=False)
     genre = serializers.SlugRelatedField(
         slug_field="slug",
@@ -205,11 +203,6 @@ class TitleSerializer(serializers.ModelSerializer):
             "category",
             "rating",
         )
-
-    def get_rating(self, obj):
-        title = Title.objects.filter(name=obj.name).annotate(
-            rating=Avg('reviews__score', output_field=IntegerField()))[0]
-        return title.rating
 
     def validate_year(self, value):
         year = dt.date.today().year
