@@ -34,23 +34,6 @@ class AuthSerializer(serializers.ModelSerializer):
             )
         ]
 
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        confirmation_code = default_token_generator.make_token(user)
-        # отправляем письмо пользователю
-        send_mail(
-            subject="Код подтверждения регистрации",
-            message=(
-                f"Код подтверждения регистрации ниже \n "
-                f"{confirmation_code}. \n Имя пользователя "
-                f"{validated_data}"
-            ),
-            from_email=None,
-            recipient_list=[
-                validated_data["email"],
-            ],
-        )
-        return user
 
     def validate_username(self, value):
         # проверяем что в поле user передано не me

@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class OnlyAdmin(permissions.BasePermission):
+class Admin(permissions.BasePermission):
     message = "Доступ разрешен только администратору."
 
     def has_permission(self, request, view):
@@ -14,18 +14,18 @@ class OnlyAdmin(permissions.BasePermission):
         return False
 
 
-class OnlyOwnAccount(permissions.BasePermission):
+class OwnAccount(permissions.BasePermission):
     message = "Доступ разрешен только к своему аккаунту."
 
-    def has_permission(self, request, view):
-        return request.user.is_authenticated
+    # def has_permission(self, request, view):
+    #     return request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         return (request.user.is_authenticated
                 and request.user == obj)
 
 
-class OwnerOrReadOnlyList(permissions.BasePermission):
+class Owner(permissions.BasePermission):
     message = "Изменение данных доступно только владельцу."
 
     def has_permission(self, request, view):
@@ -41,10 +41,10 @@ class OwnerOrReadOnlyList(permissions.BasePermission):
 
 class AdminOrModerator(permissions.BasePermission):
     message = "Доступ разрешен только администраторам и модераторам."
-
-    def has_permission(self, request, view):
-        return request.user.is_authenticated
-
+    
+    # def has_permission(self, request, view):
+    #     return request.user.is_authenticated
+ 
     def has_object_permission(self, request, view, obj):
         return (
             request.user.is_admin
