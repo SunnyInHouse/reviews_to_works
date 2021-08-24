@@ -18,6 +18,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
+from .filters import TitleFilter
 from .permissions import (
     AdminOrModerator,
     Admin,
@@ -35,7 +36,6 @@ from .serializers import (
     TokenDataSerializer,
     UsersSerializer,
 )
-from .filters import TitleFilter
 
 
 class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -52,7 +52,7 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             status=status.HTTP_200_OK,
             headers=headers
         )
-    
+
     def perform_create(self, serializer):
         serializer.save()
         user = User.objects.get(**serializer.validated_data)
@@ -70,6 +70,7 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 serializer.validated_data["email"],
             ],
         )
+
 
 @api_view(["POST", ])
 def get_jwt_token(request):
@@ -95,7 +96,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     lookup_field = "username"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (perm.IsAuthenticated&Admin,)
+    permission_classes = (perm.IsAuthenticated & Admin,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("=username",)
@@ -127,7 +128,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (Owner|AdminOrModerator|ReadOnly,)
+    permission_classes = (Owner | AdminOrModerator | ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     @property
@@ -146,7 +147,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (Owner|AdminOrModerator|ReadOnly,)
+    permission_classes = (Owner | AdminOrModerator | ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     def get_queryset(self):
@@ -176,7 +177,7 @@ class GenreViewSet(
     serializer_class = GenreSerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
+    permission_classes = (perm.IsAuthenticated & Admin | ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter, )
     search_fields = ("name",)
@@ -192,7 +193,7 @@ class CategoryViewSet(
     serializer_class = CategorySerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
+    permission_classes = (perm.IsAuthenticated & Admin | ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
@@ -202,7 +203,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
+    permission_classes = (perm.IsAuthenticated & Admin | ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
