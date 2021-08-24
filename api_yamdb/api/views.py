@@ -20,9 +20,9 @@ from users.models import User
 
 from .permissions import (
     AdminOrModerator,
-    OnlyAdmin,
-    OnlyOwnAccount,
-    OwnerOrReadOnlyList,
+    Admin,
+    OwnAccount,
+    Owner,
     ReadOnly,
 )
 from .serializers import (
@@ -55,7 +55,8 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         )
     
     def perform_create(self, serializer):
-        user = User.objects.create_user(**serializer.validated_data)
+        serializer.save()
+        user = User.objects.get(**serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
         # отправляем письмо пользователю
         send_mail(
@@ -95,7 +96,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     lookup_field = "username"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin,)
+    permission_classes = (Admin,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("=username",)
@@ -103,7 +104,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["get", "patch"],
-        permission_classes=(OnlyOwnAccount&perm.IsAuthenticated,),
+        permission_classes=(OwnAccount&perm.IsAuthenticated,),
     )
     def me(self, request):
         user = request.user
@@ -127,7 +128,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList|AdminOrModerator&perm.IsAuthenticated&ReadOnly,)
+    permission_classes = (Owner|AdminOrModerator&perm.IsAuthenticated&ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     @property
@@ -151,7 +152,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList|AdminOrModerator&perm.IsAuthenticated&ReadOnly,)
+    permission_classes = (Owner|AdminOrModerator&perm.IsAuthenticated&ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     def get_queryset(self):
@@ -181,15 +182,15 @@ class GenreViewSet(
     serializer_class = GenreSerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin,)
+    permission_classes = (Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter, )
     search_fields = ("name",)
 
-    def get_permissions(self):
-        if self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
+    # def get_permissions(self):
+    #     if self.action == 'list':
+    #         return (ReadOnly(),)
+    #     return super().get_permissions()
 
 
 class CategoryViewSet(
@@ -202,22 +203,22 @@ class CategoryViewSet(
     serializer_class = CategorySerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin,)
+    permission_classes = (Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
 
-    def get_permissions(self):
-        if self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
+    # def get_permissions(self):
+    #     if self.action == 'list':
+    #         return (ReadOnly(),)
+    #     return super().get_permissions()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin|ReadOnly,)
+    permission_classes = (Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter

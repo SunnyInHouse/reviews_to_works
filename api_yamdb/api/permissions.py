@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class OnlyAdmin(permissions.BasePermission):
+class Admin(permissions.BasePermission):
     message = "Доступ разрешен только администратору."
 
     def has_permission(self, request, view):
@@ -14,7 +14,7 @@ class OnlyAdmin(permissions.BasePermission):
         return False
 
 
-class OnlyOwnAccount(permissions.BasePermission):
+class OwnAccount(permissions.BasePermission):
     message = "Доступ разрешен только к своему аккаунту."
 
     # def has_permission(self, request, view):
@@ -25,7 +25,7 @@ class OnlyOwnAccount(permissions.BasePermission):
                 and request.user == obj)
 
 
-class OwnerOrReadOnlyList(permissions.BasePermission):
+class Owner(permissions.BasePermission):
     message = "Изменение данных доступно только владельцу."
 
     def has_permission(self, request, view):
