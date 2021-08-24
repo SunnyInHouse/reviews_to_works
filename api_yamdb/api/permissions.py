@@ -1,54 +1,41 @@
 from rest_framework import permissions
 
 
-class OnlyAdmin(permissions.BasePermission):
+class Admin(permissions.BasePermission):
     message = "Доступ разрешен только администратору."
 
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            return (
-                request.user.is_admin
-                or request.user.is_staff
-                or request.user.is_superuser
-            )
-        return False
+        return (
+            request.user.is_admin
+            or request.user.is_staff
+            or request.user.is_superuser
+        )
 
 
-class OnlyOwnAccount(permissions.BasePermission):
+class OwnAccount(permissions.IsAuthenticated):
     message = "Доступ разрешен только к своему аккаунту."
-
-    def has_permission(self, request, view):
-        return request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         return (request.user.is_authenticated
                 and request.user == obj)
 
 
-class OwnerOrReadOnlyList(permissions.BasePermission):
+class Owner(permissions.IsAuthenticated):
     message = "Изменение данных доступно только владельцу."
 
-    def has_permission(self, request, view):
-        return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-        )
-
     def has_object_permission(self, request, view, obj):
-        return (request.method in permissions.SAFE_METHODS
-                or obj.author == request.user)
+        return (request.user.is_authenticated
+                and request.user == obj.author)
 
 
-class AdminOrModerator(permissions.BasePermission):
+class AdminOrModerator(permissions.IsAuthenticated):
     message = "Доступ разрешен только администраторам и модераторам."
-
-    def has_permission(self, request, view):
-        return request.user.is_authenticated
-
+ 
     def has_object_permission(self, request, view, obj):
         return (
-            request.user.is_admin
-            or request.user.is_moderator
+            request.user.is_authenticated
+            and (request.user.is_admin
+                 or request.user.is_moderator)
         )
 
 
@@ -56,4 +43,7 @@ class ReadOnly(permissions.BasePermission):
     message = "Разрешено только чтение."
 
     def has_permission(self, request, view):
+        return request.method in permissions.SAFE_METHODS
+    
+    def has_object_permission(self, request, view, obj):
         return request.method in permissions.SAFE_METHODS

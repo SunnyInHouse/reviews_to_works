@@ -2,8 +2,6 @@ import datetime as dt
 
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
-from django.db.models import Avg, IntegerField
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -34,23 +32,6 @@ class AuthSerializer(serializers.ModelSerializer):
             )
         ]
 
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        confirmation_code = default_token_generator.make_token(user)
-        # отправляем письмо пользователю
-        send_mail(
-            subject="Код подтверждения регистрации",
-            message=(
-                f"Код подтверждения регистрации ниже \n "
-                f"{confirmation_code}. \n Имя пользователя "
-                f"{validated_data}"
-            ),
-            from_email=None,
-            recipient_list=[
-                validated_data["email"],
-            ],
-        )
-        return user
 
     def validate_username(self, value):
         # проверяем что в поле user передано не me
@@ -222,11 +203,6 @@ class TitleSerializer(serializers.ModelSerializer):
             "category",
             "rating",
         )
-
-    # def get_rating(self, obj):
-    #     title = Title.objects.filter(name=obj.name).annotate(
-    #         rating=Avg('reviews__score', output_field=IntegerField()))[0]
-    #     return title.rating
 
     def validate_year(self, value):
         year = dt.date.today().year

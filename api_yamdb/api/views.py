@@ -1,10 +1,13 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters,
     mixins,
     pagination,
+    permissions as perm,
     status,
     viewsets,
 )
@@ -18,9 +21,9 @@ from users.models import User
 
 from .permissions import (
     AdminOrModerator,
-    OnlyAdmin,
-    OnlyOwnAccount,
-    OwnerOrReadOnlyList,
+    Admin,
+    OwnAccount,
+    Owner,
     ReadOnly,
 )
 from .serializers import (
@@ -50,7 +53,24 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             status=status.HTTP_200_OK,
             headers=headers
         )
-
+    
+    def perform_create(self, serializer):
+        serializer.save()
+        user = User.objects.get(**serializer.validated_data)
+        confirmation_code = default_token_generator.make_token(user)
+        # отправляем письмо пользователю
+        send_mail(
+            subject="Код подтверждения регистрации",
+            message=(
+                f"Код подтверждения регистрации ниже \n "
+                f"{confirmation_code}. \n Имя пользователя "
+                f"{serializer.validated_data['username']}"
+            ),
+            from_email=None,
+            recipient_list=[
+                serializer.validated_data["email"],
+            ],
+        )
 
 @api_view(["POST", ])
 def get_jwt_token(request):
@@ -76,7 +96,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     lookup_field = "username"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin,)
+    permission_classes = (perm.IsAuthenticated&Admin,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("=username",)
@@ -84,7 +104,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["get", "patch"],
-        permission_classes=(OnlyOwnAccount,),
+        permission_classes=(OwnAccount,),
     )
     def me(self, request):
         user = request.user
@@ -108,26 +128,26 @@ class UsersViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
+    permission_classes = (Owner|AdminOrModerator|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     @property
-    def _get_title(self):
+    def _title(self):
         return get_object_or_404(Title, pk=self.kwargs.get("title_id"))
 
     def get_queryset(self):
-        title = self._get_title
+        title = self._title
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        title = self._get_title
+        title = self._title
         serializer.save(author=self.request.user, title=title)
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OwnerOrReadOnlyList | AdminOrModerator,)
+    permission_classes = (Owner|AdminOrModerator|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     def get_queryset(self):
@@ -157,15 +177,10 @@ class GenreViewSet(
     serializer_class = GenreSerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin,)
+    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter, )
     search_fields = ("name",)
-
-    def get_permissions(self):
-        if self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
 
 
 class CategoryViewSet(
@@ -178,27 +193,17 @@ class CategoryViewSet(
     serializer_class = CategorySerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin,)
+    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
-
-    def get_permissions(self):
-        if self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (OnlyAdmin,)
+    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-
-    def get_permissions(self):
-        if self.action == 'retrieve' or self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
