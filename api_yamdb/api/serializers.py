@@ -32,7 +32,6 @@ class AuthSerializer(serializers.ModelSerializer):
             )
         ]
 
-
     def validate_username(self, value):
         # проверяем что в поле user передано не me
         if value == "me":
