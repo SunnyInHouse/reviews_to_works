@@ -31,7 +31,6 @@ from .serializers import (
     CommentSerializer,
     GenreSerializer,
     ReviewsSerializer,
-    ReviewsSerializerCreate,
     TitleSerializer,
     TokenDataSerializer,
     UsersSerializer,
@@ -138,11 +137,6 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         title = self._title
         return title.reviews.all()
-
-    def get_serializer_class(self):
-        if self.action == "create":
-            return ReviewsSerializerCreate
-        return ReviewsSerializer
 
     def perform_create(self, serializer):
         title = self._title

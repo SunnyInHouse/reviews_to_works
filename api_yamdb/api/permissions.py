@@ -41,7 +41,7 @@ class Owner(permissions.BasePermission):
 
 class AdminOrModerator(permissions.BasePermission):
     message = "Доступ разрешен только администраторам и модераторам."
-
+    
     # def has_permission(self, request, view):
     #     return request.user.is_authenticated
  
