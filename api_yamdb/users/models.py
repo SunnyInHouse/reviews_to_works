@@ -59,13 +59,13 @@ class User(AbstractUser):
     #     return f"{self.username}"
  # ADDED METHODS
     @property
-    def is_admin(self, request):
-        return request.user.role == self.ADMIN
+    def is_admin(self):
+        return self.role == User.ADMIN
     
     @property
-    def is_moderator(self, request):
-        return request.user.role == self.MODERATOR
+    def is_moderator(self):
+        return self.role == User.MODERATOR
     
     @property
-    def is_user(self, request):
-        return request.user.role == self.USER
+    def is_user(self):
+        return self.role == User.USER
