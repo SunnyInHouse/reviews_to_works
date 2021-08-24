@@ -28,9 +28,10 @@ from .serializers import (
     GenreSerializer,
     ReviewsSerializer,
     TitleSerializer,
-    # TitleSerializerList,
+    TitleListSerializer,
     TokenDataSerializer,
-    UsersSerializer, ReviewsSerializerPost,
+    UsersSerializer,
+    ReviewsSerializerPost
 )
 from .filters import TitleFilter
 
@@ -210,6 +211,11 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
+    def get_serializer_class(self):
+        if self.action == 'retrive' or self.action == 'list':
+            return TitleListSerializer
+        return TitleSerializer
+    
     def get_permissions(self):
         if self.action == 'retrieve' or self.action == 'list':
             return (ReadOnly(),)

@@ -347,3 +347,34 @@ class TitleSerializer(serializers.ModelSerializer):
         response['genre'] = GenreSerializer(instance.genre, many=True).data
         response['category'] = CategorySerializer(instance.category).data
         return response
+
+
+class TitleListSerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
+    description = serializers.CharField(required=False)
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+
+    class Meta:
+        model = Title
+        fields = (
+            "id",
+            "name",
+            "year",
+            "description",
+            "genre",
+            "category",
+            "rating",
+        )
+
+    def get_rating(self, obj):
+        title = Title.objects.filter(name=obj.name).annotate(
+            rating=Avg('reviews__score'))[0]
+
+        return title.rating
+
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if value > year:
+            raise serializers.ValidationError("Проверьте год!")
+        return value
