@@ -95,7 +95,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     lookup_field = "username"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (Admin,)
+    permission_classes = (perm.IsAuthenticated&Admin,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("=username",)
@@ -103,7 +103,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["get", "patch"],
-        permission_classes=(OwnAccount&perm.IsAuthenticated,),
+        permission_classes=(OwnAccount,),
     )
     def me(self, request):
         user = request.user
@@ -127,7 +127,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (Owner|AdminOrModerator&perm.IsAuthenticated&ReadOnly,)
+    permission_classes = (Owner|AdminOrModerator|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     @property
@@ -146,7 +146,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (Owner|AdminOrModerator&perm.IsAuthenticated&ReadOnly,)
+    permission_classes = (Owner|AdminOrModerator|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
 
     def get_queryset(self):
@@ -176,15 +176,10 @@ class GenreViewSet(
     serializer_class = GenreSerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (Admin|ReadOnly,)
+    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter, )
     search_fields = ("name",)
-
-    # def get_permissions(self):
-    #     if self.action == 'list':
-    #         return (ReadOnly(),)
-    #     return super().get_permissions()
 
 
 class CategoryViewSet(
@@ -197,22 +192,17 @@ class CategoryViewSet(
     serializer_class = CategorySerializer
     lookup_field = "slug"
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (Admin|ReadOnly,)
+    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
-
-    # def get_permissions(self):
-    #     if self.action == 'list':
-    #         return (ReadOnly(),)
-    #     return super().get_permissions()
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     authentication_classes = (JWTAuthentication,)
-    permission_classes = (Admin|ReadOnly,)
+    permission_classes = (perm.IsAuthenticated&Admin|ReadOnly,)
     pagination_class = pagination.PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
