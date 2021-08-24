@@ -3,7 +3,7 @@ import datetime as dt
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
-from django.db.models import Avg
+from django.db.models import Avg, IntegerField
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -162,13 +162,13 @@ class ReviewsSerializer(serializers.ModelSerializer):
             "pub_date",
         )
 
-
-class ReviewsSerializerCreate(ReviewsSerializer):
-
     def validate(self, data):
         title = self.context.get("view").kwargs["title_id"]
         user = self.context["request"].user
-        if user.reviews.filter(title__id=title).exists():
+        if (
+                user.reviews.filter(title__id=title).exists()
+                and self.context["request"].method != "PATCH"
+        ):
             raise ValidationError(
                 "Нельзя публиковать более 1 отзыва на произведение"
             )
@@ -225,8 +225,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         title = Title.objects.filter(name=obj.name).annotate(
-            rating=Avg('reviews__score'))[0]
-
+            rating=Avg('reviews__score', output_field=IntegerField()))[0]
         return title.rating
 
     def validate_year(self, value):
