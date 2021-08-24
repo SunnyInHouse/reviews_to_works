@@ -199,7 +199,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
     description = serializers.CharField(required=False)
     genre = serializers.SlugRelatedField(
         slug_field="slug",
@@ -223,10 +223,10 @@ class TitleSerializer(serializers.ModelSerializer):
             "rating",
         )
 
-    def get_rating(self, obj):
-        title = Title.objects.filter(name=obj.name).annotate(
-            rating=Avg('reviews__score', output_field=IntegerField()))[0]
-        return title.rating
+    # def get_rating(self, obj):
+    #     title = Title.objects.filter(name=obj.name).annotate(
+    #         rating=Avg('reviews__score', output_field=IntegerField()))[0]
+    #     return title.rating
 
     def validate_year(self, value):
         year = dt.date.today().year
